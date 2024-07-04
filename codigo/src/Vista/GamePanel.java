@@ -84,26 +84,35 @@ public class GamePanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            JButton button = buttons[row][col];
-            button.setEnabled(false);
-            button.setBackground(Color.BLACK);
+            // Asegurarse de que los barcos solo se coloquen en el tablero del jugador
+            if (buttons == playerButtons) {
+                JButton button = buttons[row][col];
+                button.setEnabled(false);
+                button.setBackground(Color.BLACK);
 
-            if (currentShipIndex < ships.length) {
-                Ship currentShip = ships[currentShipIndex];
-                int length = currentShip.getLength();
+                if (currentShipIndex < ships.length) {
+                    Ship currentShip = ships[currentShipIndex];
+                    int length = currentShip.getLength();
 
-                if (canPlaceShip(row, col, length)) {
-                    placeShip(row, col, length);
-                    currentShipIndex++;
-                }
+                    if (canPlaceShip(row, col, length, playerBoardMatrix)) {
+                        placeShip(row, col, length, playerBoardMatrix);
+                        currentShipIndex++;
+                    }
 
-                if (currentShipIndex >= ships.length) {
-                    // Una vez que se hayan colocado todos los barcos, mostrar la ventana de preguntas
-                    if (Preguntas.askQuestion((JFrame) SwingUtilities.getWindowAncestor(GamePanel.this))) {
-                        // Lógica para atacar al enemigo después de responder correctamente la pregunta
-                        System.out.println("Pregunta respondida correctamente, ahora puedes atacar al enemigo.");
-                    } else {
-                        System.out.println("Respuesta incorrecta, no puedes atacar al enemigo.");
+                    if (currentShipIndex >= ships.length) {
+                        // Una vez que se hayan colocado todos los barcos, mostrar la ventana de preguntas
+                        if (Preguntas.askQuestion((JFrame) SwingUtilities.getWindowAncestor(GamePanel.this))) {
+                            // Mensaje de éxito
+                            JOptionPane.showMessageDialog(GamePanel.this, 
+                                "Pregunta respondida correctamente, ahora puedes atacar al enemigo.", 
+                                "Correcto", JOptionPane.INFORMATION_MESSAGE);
+                            // Aquí se puede añadir la lógica para atacar al enemigo
+                        } else {
+                            // Mensaje de error
+                            JOptionPane.showMessageDialog(GamePanel.this, 
+                                "Respuesta incorrecta, no puedes atacar al enemigo.", 
+                                "Incorrecto", JOptionPane.ERROR_MESSAGE);
+                        }
                     }
                 }
             }
@@ -126,56 +135,57 @@ public class GamePanel extends JPanel {
 
         @Override
         public void mouseEntered(MouseEvent e) {
-            if (currentShipIndex >= ships.length) {
-                return;
-            }
+            // Asegurarse de que el resaltado del barco solo ocurra en el tablero del jugador
+            if (buttons == playerButtons && currentShipIndex < ships.length) {
+                Ship currentShip = ships[currentShipIndex];
+                int length = currentShip.getLength();
 
-            Ship currentShip = ships[currentShipIndex];
-            int length = currentShip.getLength();
-
-            if (canPlaceShip(row, col, length)) {
-                highlightShip(row, col, length, true);
+                if (canPlaceShip(row, col, length, playerBoardMatrix)) {
+                    highlightShip(row, col, length, true, playerBoardMatrix);
+                }
             }
         }
 
         @Override
         public void mouseExited(MouseEvent e) {
-            if (currentShipIndex >= ships.length) {
-                return;
-            }
+            // Asegurarse de que el resaltado del barco solo ocurra en el tablero del jugador
+            if (buttons == playerButtons && currentShipIndex < ships.length) {
+                Ship currentShip = ships[currentShipIndex];
+                int length = currentShip.getLength();
 
-            Ship currentShip = ships[currentShipIndex];
-            int length = currentShip.getLength();
-
-            if (canPlaceShip(row, col, length)) {
-                highlightShip(row, col, length, false);
+                if (canPlaceShip(row, col, length, playerBoardMatrix)) {
+                    highlightShip(row, col, length, false, playerBoardMatrix);
+                }
             }
         }
 
-        private boolean canPlaceShip(int row, int col, int length) {
+        // Modificar el método canPlaceShip para trabajar con el tablero del jugador
+        private boolean canPlaceShip(int row, int col, int length, int[][] boardMatrix) {
             if (col + length > BOARD_SIZE)
                 return false;
             for (int i = 0; i < length; i++) {
-                if (playerBoardMatrix[row][col + i] != 0)
+                if (boardMatrix[row][col + i] != 0)
                     return false;
             }
             return true;
         }
 
-        private void highlightShip(int row, int col, int length, boolean highlight) {
+        // Modificar el método highlightShip para trabajar con el tablero del jugador
+        private void highlightShip(int row, int col, int length, boolean highlight, int[][] boardMatrix) {
             for (int i = 0; i < length; i++) {
                 JButton button = buttons[row][col + i];
                 button.setBorder(
-                    highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true) : UIManager.getBorder("Button.border"));
+                        highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true) : UIManager.getBorder("Button.border"));
             }
         }
 
-        private void placeShip(int row, int col, int length) {
+        // Modificar el método placeShip para trabajar con el tablero del jugador
+        private void placeShip(int row, int col, int length, int[][] boardMatrix) {
             for (int i = 0; i < length; i++) {
                 JButton button = buttons[row][col + i];
                 button.setBackground(Color.BLACK);
                 button.setEnabled(false);
-                playerBoardMatrix[row][col + i] = 1;
+                boardMatrix[row][col + i] = 1;
             }
         }
     }
