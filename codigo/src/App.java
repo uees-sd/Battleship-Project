@@ -1,7 +1,7 @@
-import Vista.SideBar;
+import Controllers.Comunicacion.ClientController;
 
 public class App {
   public static void main(String[] args) {
-    SideBar sideBar = new SideBar();
+    new ClientController();
   }
 }

@@ -1,4 +1,4 @@
-package Vista;
+package Views;
 
 import java.awt.BorderLayout;
 import javax.swing.*;
