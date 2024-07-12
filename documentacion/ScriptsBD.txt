@@ -1,0 +1,166 @@
+
+--CREACION DE TABLA PREGUNTAS
+CREATE TABLE Preguntas (
+    pregunta_id SERIAL PRIMARY KEY,
+    texto VARCHAR(500) NOT NULL
+);
+
+
+--CREACION DE TABLA OPCIONES
+CREATE TABLE Opciones (
+    opcion_id SERIAL PRIMARY KEY,
+    pregunta_id INT REFERENCES Preguntas(pregunta_id) ON DELETE CASCADE,
+    texto VARCHAR(500) NOT NULL,
+    es_correcta BOOLEAN NOT NULL
+);
+
+--FIll DE LA BASE DE DATOS
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es la capital de Francia?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (1, 'París', TRUE), (1, 'Londres', FALSE), (1, 'Berlín', FALSE), (1, 'Madrid', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué planeta es el más cercano al sol?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (2, 'Mercurio', TRUE), (2, 'Venus', FALSE), (2, 'Tierra', FALSE), (2, 'Marte', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Quién inventó la bombilla eléctrica?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (3, 'Thomas Edison', TRUE), (3, 'Nikola Tesla', FALSE), (3, 'Alexander Graham Bell', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el país más pequeño del mundo?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (4, 'Vaticano', TRUE), (4, 'Mónaco', FALSE), (4, 'San Marino', FALSE), (4, 'Liechtenstein', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué tipo de animal es la ballena?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (5, 'Mamífero', TRUE), (5, 'Pez', FALSE), (5, 'Anfibio', FALSE), (5, 'Reptil', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es la moneda de Estados Unidos?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (6, 'Dólar', TRUE), (6, 'Euro', FALSE), (6, 'Libra', FALSE), (6, 'Yen', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Quién fue el primer hombre en pisar la luna?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (7, 'Neil Armstrong', TRUE), (7, 'Buzz Aldrin', FALSE), (7, 'Yuri Gagarin', FALSE), (7, 'Alan Shepard', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué gas es necesario para respirar?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (8, 'Oxígeno', TRUE), (8, 'Dióxido de carbono', FALSE), (8, 'Nitrógeno', FALSE), (8, 'Helio', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué órgano del cuerpo humano bombea sangre?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (9, 'Corazón', TRUE), (9, 'Pulmón', FALSE), (9, 'Hígado', FALSE), (9, 'Riñón', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuántos lados tiene un triángulo?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (10, 'Tres', TRUE), (10, 'Cuatro', FALSE), (10, 'Cinco', FALSE), (10, 'Seis', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el hueso más largo del cuerpo humano?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (11, 'Fémur', TRUE), (11, 'Tibia', FALSE), (11, 'Húmero', FALSE), (11, 'Radio', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuántos continentes hay en la Tierra?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (12, 'Siete', TRUE), (12, 'Seis', FALSE), (12, 'Cinco', FALSE), (12, 'Ocho', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el río más largo de América del Sur?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (13, 'Amazonas', TRUE), (13, 'Orinoco', FALSE), (13, 'Paraná', FALSE), (13, 'Magdalena', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el continente más grande?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (14, 'Asia', TRUE), (14, 'África', FALSE), (14, 'Europa', FALSE), (14, 'América', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué animal es conocido por cambiar de color para camuflarse?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (15, 'Camaleón', TRUE), (15, 'Pulpo', FALSE), (15, 'Cangrejo ermitaño', FALSE), (15, 'Cocodrilo', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué fenómeno natural es conocido por su forma de embudo y vientos muy fuertes?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (16, 'Tornado', TRUE), (16, 'Huracán', FALSE), (16, 'Terremoto', FALSE), (16, 'Tsunami', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuántos días tiene un año bisiesto?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (17, '366', TRUE), (17, '365', FALSE), (17, '360', FALSE), (17, '367', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué animal es el símbolo de la paz?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (18, 'Paloma', TRUE), (18, 'Delfín', FALSE), (18, 'Elefante', FALSE), (18, 'León', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué elemento químico tiene el símbolo "H"?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (19, 'Hidrógeno', TRUE), (19, 'Helio', FALSE), (19, 'Hierro', FALSE), (19, 'Oxígeno', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuántos colores tiene el arcoíris?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (20, 'Siete', TRUE), (20, 'Seis', FALSE), (20, 'Ocho', FALSE), (20, 'Cinco', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Quién pintó la Mona Lisa?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (21, 'Leonardo da Vinci', TRUE), (21, 'Pablo Picasso', FALSE), (21, 'Vincent van Gogh', FALSE), (21, 'Claude Monet', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué porcentaje del agua en la Tierra es agua salada?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (22, 'Aproximadamente 97%', TRUE), (22, 'Aproximadamente 75%', FALSE), (22, 'Aproximadamente 50%', FALSE), (22, 'Aproximadamente 25%', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿En qué año comenzó la Segunda Guerra Mundial?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (23, '1939', TRUE), (23, '1941', FALSE), (23, '1945', FALSE), (23, '1929', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Quién fue el primer presidente de Estados Unidos?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (24, 'George Washington', TRUE), (24, 'Abraham Lincoln', FALSE), (24, 'Thomas Jefferson', FALSE), (24, 'John Adams', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el significado de la palabra "knowledge" en inglés?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (25, 'Conocimiento', TRUE), (25, 'Habilidad', FALSE), (25, 'Tiempo', FALSE), (25, 'Pregunta', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál de los siguientes números es primo?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (26, '7', TRUE), (26, '10', FALSE), (26, '15', FALSE), (26, '20', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué figura literaria consiste en dar características humanas a objetos o animales?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (27, 'Personificación', TRUE), (27, 'Metáfora', FALSE), (27, 'Símil', FALSE), (27, 'Hipérbole', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el nombre del conjunto de palabras que rima al final de los versos de un poema?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (28, 'Rima', TRUE), (28, 'Estrofa', FALSE), (28, 'Verso', FALSE), (28, 'Léxico', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el resultado de multiplicar 7 por 4?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (29, '28', TRUE), (29, '30', FALSE), (29, '25', FALSE), (29, '35', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuántos minutos hay en una hora?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (30, '60', TRUE), (30, '30', FALSE), (30, '45', FALSE), (30, '90', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el área de un cuadrado con lado de longitud 5 unidades?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (31, '25', TRUE), (31, '20', FALSE), (31, '30', FALSE), (31, '10', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es la capa más externa de la Tierra?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (32, 'Corteza', TRUE), (32, 'Manto', FALSE), (32, 'Núcleo externo', FALSE), (32, 'Núcleo interno', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el proceso mediante el cual las plantas producen su propio alimento?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (33, 'Fotosíntesis', TRUE), (33, 'Respiración', FALSE), (33, 'Germinación', FALSE), (33, 'Transpiración', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué tipo de energía proviene del sol y es fundamental para la vida en la Tierra?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (34, 'Energía solar', TRUE), (34, 'Energía eólica', FALSE), (34, 'Energía nuclear', FALSE), (34, 'Energía hidráulica', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es la unidad básica de la estructura de los seres vivos?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (35, 'Célula', TRUE), (35, 'Átomo', FALSE), (35, 'Molécula', FALSE), (35, 'Tejido', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el nombre del proceso por el cual el agua en forma líquida se convierte en vapor?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (36, 'Evaporación', TRUE), (36, 'Condensación', FALSE), (36, 'Sublimación', FALSE), (36, 'Fusión', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el nombre del proceso por el cual las plantas toman agua y nutrientes a través de sus raíces?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (37, 'Absorción', TRUE), (37, 'Transpiración', FALSE), (37, 'Fotosíntesis', FALSE), (37, 'Germinación', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué evento histórico terminó en 1945?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (38, 'Segunda Guerra Mundial', TRUE), (38, 'Primera Guerra Mundial', FALSE), (38, 'Guerra de Vietnam', FALSE), (38, 'Guerra Fría', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué instrumento se utiliza para medir la temperatura del cuerpo humano?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (39, 'Termómetro', TRUE), (39, 'Barómetro', FALSE), (39, 'Higrómetro', FALSE), (39, 'Cronómetro', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el país más grande del mundo por área terrestre?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (40, 'Rusia', TRUE), (40, 'Canadá', FALSE), (40, 'China', FALSE), (40, 'Estados Unidos', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el planeta conocido como "el planeta rojo"?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (41, 'Marte', TRUE), (41, 'Venus', FALSE), (41, 'Júpiter', FALSE), (41, 'Mercurio', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('Identifica la palabra "happy".');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (42, 'Adjetivo', TRUE), (42, 'Verbo', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('Identifica la palabra "sing".');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (43, 'Verbo', TRUE), (43, 'Adjetivo', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el tiempo pasado de la palabra "go"?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (44, 'Went', TRUE), (44, 'Gone', FALSE), (44, 'Goed', FALSE), (44, 'Going', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Dónde está ubicado el centro del mundo?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (45, 'Ecuador', TRUE), (45, 'Perú', FALSE), (45, 'Colombia', FALSE), (45, 'Brasil', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Quién escribió "Romeo y Julieta"?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (46, 'William Shakespeare', TRUE), (46, 'Charles Dickens', FALSE), (46, 'Jane Austen', FALSE), (46, 'Mark Twain', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuál es el hueso más pequeño del cuerpo humano?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (47, 'Estribo', TRUE), (47, 'Fémur', FALSE), (47, 'Cráneo', FALSE), (47, 'Tibia', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuántos huesos tiene un ser humano adulto aproximadamente?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (48, '206', TRUE), (48, '180', FALSE), (48, '300', FALSE), (48, '120', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Qué país tiene forma de bota en el mapa?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (49, 'Italia', TRUE), (49, 'España', FALSE), (49, 'Francia', FALSE), (49, 'Alemania', FALSE);
+
+INSERT INTO Preguntas (texto) VALUES ('¿Cuántas patas tiene una araña?');
+INSERT INTO Opciones (pregunta_id, texto, es_correcta) VALUES (50, 'Ocho', TRUE), (50, 'Seis', FALSE), (50, 'Diez', FALSE), (50, 'Doce', FALSE);
