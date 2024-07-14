@@ -1,7 +1,6 @@
 package Models;
 
 import java.util.ArrayList;
-
 import Controllers.Comunicacion.ClientHandler;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -13,16 +12,26 @@ public class ServerModel {
   private ArrayList<String> shipsDestroyed = new ArrayList<>();
   private ServerSocket serverSocket;
   private ServerView serverView;
+  private int serverPort;
 
   public void startServer(int port) throws IOException, ClassNotFoundException {
     serverSocket = new ServerSocket(port);
-
-    while (true && onlineUsers.size() < 3) {
+    this.serverPort = port;
+    while (true) {
       Socket clientSocket = serverSocket.accept();
-      ClientHandler clientHandler = new ClientHandler(clientSocket, this);
-      Thread thread = new Thread(clientHandler);
-      thread.start();
+      if (onlineUsers.size() < 2) {
+        ClientHandler clientHandler = new ClientHandler(clientSocket, this);
+        Thread thread = new Thread(clientHandler);
+        thread.start();
+      } else {
+        clientSocket.close();
+      }
+
     }
+  }
+
+  public int getServerPort() {
+    return serverPort;
   }
 
   public void addOnlineUser(String playerName) {

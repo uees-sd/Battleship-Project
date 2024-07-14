@@ -1,6 +1,8 @@
 package Views;
 
-public class Ship {
+import java.io.Serializable;
+
+public class Ship implements Serializable {
     private final int length;
     private ShipStatus status;
 

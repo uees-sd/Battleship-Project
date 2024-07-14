@@ -6,25 +6,39 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
 import Views.Ship;
 import Views.ClientView;
+import Views.Board;
+
+@SuppressWarnings("unused")
 
 public class ClientModel {
   private ArrayList<Ship> ships = new ArrayList<>();
-  private ArrayList<String> onlineUser = new ArrayList<>();
+  private ArrayList<String> onlineUsers = new ArrayList<>();
+  private ArrayList<Board> boards = new ArrayList<>();
+  private String serverPort;
   private String playerName;
   private ObjectOutputStream out;
   private ObjectInputStream in;
   private Socket clientSocket;
+  private Board playerBoard = new Board();
   private ClientView clientView;
+  private int flag = 0;
 
   // Create a new client model and the conecction to the server
   public void connect(String playerName, int serverPort) throws IOException {
     this.playerName = playerName;
+    this.serverPort = String.valueOf(serverPort);
+    playerBoard.setBoardTitle(playerName);
     clientSocket = new Socket("localhost", serverPort);
     out = new ObjectOutputStream(clientSocket.getOutputStream());
     in = new ObjectInputStream(clientSocket.getInputStream());
-    out.writeObject(playerName);
+    sendName(playerName);
+    SwingUtilities.invokeLater(() -> clientView.updateInfoPort());
+    sendBoards(playerBoard);
   }
 
   // Send the attack to the server
@@ -32,22 +46,26 @@ public class ClientModel {
     out.writeObject(new int[] { x, y });
   }
 
-  // Receive the attack from the server
-  public void receiveAttack() throws IOException, ClassNotFoundException {
-    // int[] attack = (int[]) in.readObject();
-    System.out.println("Attack received: " + attack[0] + " " + attack[1]);
+  public void sendName(String message) throws IOException {
+    out.writeObject(message);
   }
 
-  // Verifiy if I don't have ships alive
-  /*
-   * public void destroyedShips() {
-   * for (Ship ship : ships) {
-   * if (ship.getShipStatus() == Ship.ShipStatus.ALIVE) {
-   * break;
-   * }
-   * }
-   * }
-   */
+  public void sendBoards(JPanel playerBoard) throws IOException {
+    out.writeObject(playerBoard);
+  }
+
+  @SuppressWarnings("unchecked")
+  public void receiveMessage() throws IOException, ClassNotFoundException {
+    if (this.flag == 0) {
+      onlineUsers = (ArrayList<String>) in.readObject();
+      SwingUtilities.invokeLater(() -> clientView.updateInfoUsers());
+      this.flag = 1;
+    } else if (this.flag == 1) {
+      boards = (ArrayList<Board>) in.readObject();
+      SwingUtilities.invokeLater(() -> clientView.updateBoards());
+      this.flag = 2;
+    }
+  }
 
   // Listen for messages from the server
   public void listenForMessages() {
@@ -56,7 +74,7 @@ public class ClientModel {
       public void run() {
         while (true) {
           try {
-            receiveAttack();
+            receiveMessage();
           } catch (IOException e) {
             e.printStackTrace();
           } catch (ClassNotFoundException e) {
@@ -83,4 +101,19 @@ public class ClientModel {
     this.clientView = clientView;
   }
 
+  public JPanel getBoard() {
+    return playerBoard;
+  }
+
+  public String getPort() {
+    return serverPort;
+  }
+
+  public ArrayList<String> getOnlineUsers() {
+    return onlineUsers;
+  }
+
+  public ArrayList<Board> getBoards() {
+    return boards;
+  }
 }

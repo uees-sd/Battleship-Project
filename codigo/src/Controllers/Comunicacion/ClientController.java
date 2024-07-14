@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Random;
 
 import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
 import Models.ClientModel;
 import Views.ClientView;
 
@@ -17,7 +18,6 @@ public class ClientController {
   private ClientView clientView;
   private String playerName;
   private int port;
-  private Boolean serverListening;
 
   public ClientController() {
     this.clientModel = new ClientModel();
@@ -56,7 +56,6 @@ public class ClientController {
         if (isValidPlayerName(playerName)) {
           randomPort();
           new ServerController(port);
-          // Iniciado el servidor, se conecta el cliente
           connectToServer();
         } else {
           clientView.showError("Ingrese su nombre");
@@ -81,21 +80,26 @@ public class ClientController {
     try {
       clientModel.connect(playerName, port);
       clientModel.listenForMessages();
-      clientView.showBoard();
-      frame.setTitle("BattleShip Educativo - Inicio de Partida");
-      frame.addWindowListener(new WindowAdapter() {
-        @Override
-        public void windowClosing(WindowEvent e) {
-          clientModel.disconnect();
-        }
+      SwingUtilities.invokeLater(() -> {
+        clientView.showBoard();
+        frame.setTitle("BattleShip Educativo - Inicio de Partida");
+        frame.addWindowListener(new WindowAdapter() {
+          @Override
+          public void windowClosing(WindowEvent e) {
+            clientModel.disconnect();
+          }
+        });
       });
     } catch (IOException e) {
-      clientView.showError("Error al conectar con el servidor");
-      e.printStackTrace();
+      String errorMessage = e.getMessage();
+      if (errorMessage == null || errorMessage.contains("connection was aborted")) {
+        clientView.showError("La sala está llena, no puedes unirte.");
+      } else {
+        clientView.showError("Error al conectar con el servidor");
+        e.printStackTrace();
+      }
     }
     System.out.println("- - - connected - - -");
-    // start();
-    // startListening();
   }
 
   private boolean isValidPort() {
@@ -114,77 +118,11 @@ public class ClientController {
     }
   }
 
-  public void startListening() {
-    Thread listenerThread = new Thread(new Runnable() {
-      @Override
-      public void run() {
-        while (serverListening) {
-          // receiveData();
-
-        }
-      }
-    });
-    listenerThread.start();
-  }
-
-  // Generate a random port where create the Game
   private void randomPort() {
     Random random = new Random();
     this.port = random.nextInt(6000) + 3001;
   }
 
-  /*
-   * @Override
-   * public Ship receiveData() {
-   * try {
-   *
-   * } catch (IOException | ClassNotFoundException e) {
-   * e.printStackTrace();
-   * return null;
-   * }
-   * }
-   * 
-   * @Override
-   * public DatagramPacket sendData(Ship content) {
-   * 
-   * }
-   * 
-   * }
-   * 
-   * @Override
-   * public boolean getAttackComponent() {
-   * return attackComponent;
-   * }
-   * 
-   * public void setServerListening(boolean open) {
-   * this.serverListening = open;
-   * }
-   * 
-   * @Override
-   * public String getPort() {
-   * return "" + this.host + ":" + this.port;
-   * }
-   * 
-   * @Override
-   * public void start() {
-   * this.serverListening = true;
-   * }
-   * 
-   * @Override
-   * public void end() {
-   * this.serverListening = false;
-   * 
-   * }
-   * 
-   * @Override
-   * public boolean getServerListening() {
-   * return this.serverListening;
-   * }
-   * 
-   * public Board getBoard() {
-   * return board;
-   * }
-   */
   public static void main(String[] args) {
     new ClientController();
   }

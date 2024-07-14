@@ -1,5 +1,7 @@
 package Views;
 
+import javax.swing.BoxLayout;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import Models.ServerModel;
@@ -16,16 +18,29 @@ public class ServerView {
 
   private void initServerPanel() {
     serverPanel = new JPanel();
-    portUsed = new JTextArea(10, 20);
-    usersPlaying = new JTextArea(10, 20);
-    shipsDestroyed = new JTextArea(10, 20);
+    serverPanel.setLayout(new BoxLayout(serverPanel, BoxLayout.Y_AXIS));
+    portUsed = new JTextArea();
+    usersPlaying = new JTextArea();
+    shipsDestroyed = new JTextArea();
+
+    portUsed.setEditable(false);
+    usersPlaying.setEditable(false);
+    shipsDestroyed.setEditable(false);
+
     serverPanel.add(portUsed);
     serverPanel.add(usersPlaying);
     serverPanel.add(shipsDestroyed);
   }
 
   public void updateUsers() {
-    usersPlaying.setText(serverModel.getOnlineUsers().toString());
+    usersPlaying.setText("Usuarios jugando: \n");
+    for (String user : serverModel.getOnlineUsers()) {
+      usersPlaying.append(user);
+    }
+  }
+
+  public void showConnectionError() {
+    JOptionPane.showMessageDialog(null, "Ya hay dos jugadores connectados", "Error", JOptionPane.ERROR_MESSAGE);
   }
 
   public JPanel getServerPanel() {

@@ -10,12 +10,13 @@ import java.awt.event.MouseListener;
 
 public class Board extends JPanel {
   private final int BOARD_SIZE = 10;
+  private JLabel boardTitle;
   private final JButton[][] buttons = new JButton[BOARD_SIZE][BOARD_SIZE];
   private final int[][] boardMatrix = new int[BOARD_SIZE][BOARD_SIZE];
   private Ship[] ships = new Ship[] { new Ship(5), new Ship(4), new Ship(3), new Ship(3), new Ship(2) };
   private int currentShipIndex = 0;
 
-  public Board(String title) {
+  public Board() {
     setLayout(new BorderLayout());
     setBorder(new LineBorder(Color.cyan, 2));
 
@@ -44,7 +45,7 @@ public class Board extends JPanel {
     }
 
     add(gridPanel, BorderLayout.CENTER);
-    JLabel boardTitle = new JLabel(title, SwingConstants.CENTER);
+    boardTitle = new JLabel("", SwingConstants.CENTER);
     add(boardTitle, BorderLayout.NORTH);
   }
 
@@ -157,4 +158,9 @@ public class Board extends JPanel {
       }
     }
   }
+
+  public void setBoardTitle(String title) {
+    boardTitle.setText(title);
+  }
+
 }
