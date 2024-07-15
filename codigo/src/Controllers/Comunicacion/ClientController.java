@@ -56,15 +56,17 @@ public class ClientController {
         if (isValidPlayerName(playerName)) {
           randomPort();
           new ServerController(port);
-          connectToServer();
+          connectToServer("localhost");
         } else {
           clientView.showError("Ingrese su nombre");
         }
         break;
       case 2:
         if (isValidPlayerName(playerName) && isValidPort()) {
-          port = Integer.parseInt(clientView.getServerPort());
-          connectToServer();
+          String[] parts = clientView.getServerPort().split(":");
+          String serverIp = parts[0];
+          port = Integer.parseInt(parts[2]);
+          connectToServer(serverIp);
         } else {
           clientView.showError("Ingrese su nombre y el Puerto válido (cuatro dígitos)");
         }
@@ -76,9 +78,9 @@ public class ClientController {
     return playerName != null && !playerName.isEmpty();
   }
 
-  private void connectToServer() {
+  private void connectToServer(String serverIp) {
     try {
-      clientModel.connect(playerName, port);
+      clientModel.connect(playerName, port, serverIp);
       clientModel.listenForMessages();
       SwingUtilities.invokeLater(() -> {
         clientView.showBoard();

@@ -29,11 +29,11 @@ public class ClientModel {
   private int flag = 0;
 
   // Create a new client model and the conecction to the server
-  public void connect(String playerName, int serverPort) throws IOException {
+  public void connect(String playerName, int serverPort, String serverIp) throws IOException {
     this.playerName = playerName;
     this.serverPort = String.valueOf(serverPort);
     playerBoard.setBoardTitle(playerName);
-    clientSocket = new Socket("localhost", serverPort);
+    clientSocket = new Socket(serverIp, serverPort);
     out = new ObjectOutputStream(clientSocket.getOutputStream());
     in = new ObjectInputStream(clientSocket.getInputStream());
     sendName(playerName);
