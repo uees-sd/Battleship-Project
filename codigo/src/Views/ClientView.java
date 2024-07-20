@@ -34,7 +34,7 @@ public class ClientView {
 
     playerName = new JTextField(15);
     serverPort = new JTextField(15);
-    serverPort.setText("Just for joining a game");
+    serverPort.setText("ip:puerto");
     createGameBtn = new JButton("Crear Juego");
     joinGameBtn = new JButton("Unirse Juego");
 
@@ -137,7 +137,6 @@ public class ClientView {
     }
     gamePanel.revalidate();
     gamePanel.repaint();
-    System.out.println("hola");
 
     Container parent = clientPanel;
     while (parent != null && !(parent instanceof JFrame)) {
@@ -145,7 +144,6 @@ public class ClientView {
     }
 
     if (parent instanceof JFrame) {
-      System.out.println("Repack");
       ((JFrame) parent).pack();
     } else {
       System.out.println("JFrame no encontrado");

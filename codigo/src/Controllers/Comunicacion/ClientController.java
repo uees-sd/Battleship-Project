@@ -63,9 +63,10 @@ public class ClientController {
         break;
       case 2:
         if (isValidPlayerName(playerName) && isValidPort()) {
+          System.out.println();
           String[] parts = clientView.getServerPort().split(":");
           String serverIp = parts[0];
-          port = Integer.parseInt(parts[2]);
+          port = Integer.parseInt(parts[1]);
           connectToServer(serverIp);
         } else {
           clientView.showError("Ingrese su nombre y el Puerto válido (cuatro dígitos)");
@@ -105,7 +106,8 @@ public class ClientController {
   }
 
   private boolean isValidPort() {
-    int serverPort = Integer.parseInt(clientView.getServerPort());
+    String[] parts = clientView.getServerPort().split(":");
+    int serverPort = Integer.parseInt(parts[1]);
     try {
       if (serverPort >= 3001 && serverPort <= 8999) {
         System.out.println("port: " + serverPort);
