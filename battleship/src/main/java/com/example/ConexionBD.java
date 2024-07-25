@@ -1,4 +1,4 @@
-package com.ejemplo;
+package com.example;
 
 import java.sql.*;
 
