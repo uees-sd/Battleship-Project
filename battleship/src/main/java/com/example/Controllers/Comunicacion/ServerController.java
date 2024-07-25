@@ -1,7 +1,7 @@
-package Controllers.Comunicacion;
+package com.example.Controllers.Comunicacion;
 
-import Views.ServerView;
-import Models.ServerModel;
+import com.example.Views.ServerView;
+import com.example.Models.ServerModel;
 import java.io.IOException;
 import javax.swing.JFrame;
 

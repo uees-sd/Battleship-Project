@@ -1,4 +1,4 @@
-package Controllers.Comunicacion;
+package com.example.Controllers.Comunicacion;
 
 import java.awt.Color;
 import java.awt.event.WindowAdapter;
@@ -8,8 +8,9 @@ import java.util.Random;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import Models.ClientModel;
-import Views.ClientView;
+
+import com.example.Models.ClientModel;
+import com.example.Views.ClientView;
 
 //sender
 public class ClientController {

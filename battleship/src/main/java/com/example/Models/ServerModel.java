@@ -1,11 +1,13 @@
-package Models;
+package com.example.Models;
 
 import java.util.ArrayList;
-import Controllers.Comunicacion.ClientHandler;
+
+import com.example.Controllers.Comunicacion.ClientHandler;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import Views.ServerView;
+import com.example.Views.ServerView;
 
 public class ServerModel {
   private ArrayList<String> onlineUsers = new ArrayList<>();

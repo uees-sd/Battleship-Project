@@ -1,4 +1,4 @@
-package Views;
+package com.example.Views;
 
 import java.io.Serializable;
 

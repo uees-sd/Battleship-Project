@@ -1,4 +1,4 @@
-package Views;
+package com.example.Views;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -162,5 +162,4 @@ public class Board extends JPanel {
   public void setBoardTitle(String title) {
     boardTitle.setText(title);
   }
-
 }

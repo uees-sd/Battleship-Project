@@ -1,8 +1,9 @@
-package Views;
+package com.example.Views;
 
 import javax.swing.*;
 
-import Models.ClientModel;
+import com.example.Models.ClientModel;
+
 import java.awt.*;
 
 public class ClientView {

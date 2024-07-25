@@ -1,10 +1,11 @@
-package Views;
+package com.example.Views;
 
 import javax.swing.BoxLayout;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
-import Models.ServerModel;
+
+import com.example.Models.ServerModel;
 
 public class ServerView {
   private JPanel serverPanel;

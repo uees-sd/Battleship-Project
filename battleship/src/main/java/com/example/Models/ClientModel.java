@@ -1,4 +1,4 @@
-package Models;
+package com.example.Models;
 
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -9,9 +9,9 @@ import java.util.ArrayList;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
-import Views.Ship;
-import Views.ClientView;
-import Views.Board;
+import com.example.Views.Ship;
+import com.example.Views.ClientView;
+import com.example.Views.Board;
 
 @SuppressWarnings("unused")
 

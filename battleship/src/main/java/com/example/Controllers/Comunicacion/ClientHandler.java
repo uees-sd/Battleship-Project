@@ -1,12 +1,12 @@
-package Controllers.Comunicacion;
+package com.example.Controllers.Comunicacion;
 
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
-import Models.ServerModel;
-import Views.Board;
+import com.example.Models.ServerModel;
+import com.example.Views.Board;
 
 public class ClientHandler implements Runnable {
 
