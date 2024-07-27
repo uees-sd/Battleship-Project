@@ -1,21 +1,30 @@
 package com.example.Views;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 
 import com.example.Models.ClientModel;
 
 import java.awt.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 
 public class ClientView {
-  private JPanel clientPanel, connectionPanel, infoPanel;
-  private GameView gamePanel;
+  private JPanel clientPanel, connectionPanel, infoPanel, gamePanel;
   private JTextField playerName, serverPort;
   private JButton createGameBtn, joinGameBtn;
-  private JTextArea infoArea;
+  private JTextPane infoArea;
   private ClientModel clientModel;
+  private Font font = new Font("Arial", Font.PLAIN, 12);
+  private ArrayList<String> strings = new ArrayList<>();
+  private JLabel lblStatus;
 
   public ClientView(ClientModel clientModel) {
     this.clientModel = clientModel;
+    strings.add("<html>");
+    strings.add("</html>");
     initConnectionPanel();
     initInfoPanel();
     initGamePanel();
@@ -62,15 +71,27 @@ public class ClientView {
   }
 
   private void initInfoPanel() {
+    lblStatus = new JLabel("Iniciando Partida");
     infoPanel = new JPanel();
-    infoPanel.setLayout(new GridBagLayout());
-    infoArea = new JTextArea(10, 20);
+    infoPanel.setBorder(
+        BorderFactory.createCompoundBorder(new EmptyBorder(20, 60, 20, 60), new LineBorder(Color.MAGENTA, 2)));
+    infoPanel.setLayout(new BorderLayout());
+    infoArea = new JTextPane();
+    infoArea.setFont(font);
     infoArea.setEditable(false);
+    infoArea.setContentType("text/html");
+    infoArea.setPreferredSize(new Dimension(300, 75));
+    infoPanel.setPreferredSize(new Dimension(320, 120));
+
     infoPanel.add(infoArea);
+    infoPanel.add(lblStatus, BorderLayout.SOUTH);
   }
 
   private void initGamePanel() {
-    gamePanel = new GameView();
+    gamePanel = new JPanel();
+    gamePanel.setLayout(new BoxLayout(gamePanel, BoxLayout.X_AXIS));
+    gamePanel
+        .setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(20, 60, 20, 60), new LineBorder(Color.BLACK, 2)));
     gamePanel.add(infoPanel);
   }
 
@@ -122,20 +143,29 @@ public class ClientView {
   }
 
   public void updateInfoPort() {
-    infoArea.append("Puerto usado: " + clientModel.getPort() + "\n\n");
+    try {
+      strings.add(1, "<b>Puerto:</b> " + clientModel.getPort() + "<br><b>IP Servidor:</b> "
+          + InetAddress.getLocalHost().getHostAddress() + "<br><br>");
+    } catch (UnknownHostException e) {
+      e.printStackTrace();
+    }
+    infoArea.setText(strings.get(0) + strings.get(1) + strings.get(2));
   }
 
   public void updateInfoUsers() {
-    infoArea.append("Usuarios conectados: \n");
+    StringBuilder sb = new StringBuilder();
     for (String user : clientModel.getOnlineUsers()) {
-      infoArea.append(user);
+      sb.append(user).append("<br>");
     }
+    strings.add(2, sb.toString());
+    infoArea.setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(3));
   }
 
   public void updateBoards() {
     for (Board board : clientModel.getBoards()) {
       gamePanel.add(board);
     }
+    lblStatus.setText("Coloca tus Barcos!!");
     gamePanel.revalidate();
     gamePanel.repaint();
 

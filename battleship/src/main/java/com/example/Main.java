@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import javax.swing.JButton;
 import javax.swing.JOptionPane;
 
 //CLASE PARA PROBAR LA BD 
@@ -33,11 +32,12 @@ public class Main {
             }
 
             // Posibles opciones para la pregunta
-            String sqlOpciones = "SELECT opcion_id, texto, es_correcta FROM Opciones WHERE pregunta_id = " + preguntaId;
+            String sqlOpciones = "SELECT opcion_id, texto, es_correcta FROM Opciones WHERE pregunta_id = " + preguntaId
+                    + " ORDER BY RANDOM()";
             ResultSet rsOpciones = stmt.executeQuery(sqlOpciones);
 
             String[] opciones = new String[4];
-            boolean[] correctas = new boolean[4];
+            Boolean[] correctas = new Boolean[4];
             int i = 0;
 
             // Procesar las opciones y almacenar los textos corrección
