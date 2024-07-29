@@ -11,12 +11,12 @@ import javax.swing.SwingUtilities;
 
 import com.example.Views.Ship;
 import com.example.Views.ClientView;
+import com.example.Views.LogicBoard;
 import com.example.Views.Board;
 
 @SuppressWarnings("unused")
 
 public class ClientModel {
-  private ArrayList<Ship> ships = new ArrayList<>();
   private ArrayList<String> onlineUsers = new ArrayList<>();
   private ArrayList<Board> boards = new ArrayList<>();
   private String serverPort;
@@ -24,9 +24,11 @@ public class ClientModel {
   private ObjectOutputStream out;
   private ObjectInputStream in;
   private Socket clientSocket;
-  private Board playerBoard = new Board();
+  private LogicBoard logicBoard = new LogicBoard();
+  private Board playerBoard = new Board(logicBoard);
   private ClientView clientView;
-  private int flag = 0;
+  private int currentShipIndex = 0;
+  public int flag = 0;
 
   // Create a new client model and the conecction to the server
   public void connect(String playerName, int serverPort, String serverIp) throws IOException {
@@ -62,7 +64,10 @@ public class ClientModel {
       this.flag = 1;
     } else if (this.flag == 1) {
       boards = (ArrayList<Board>) in.readObject();
-      SwingUtilities.invokeLater(() -> clientView.updateBoards());
+      System.out.println(playerName);
+      System.out.println(onlineUsers.size());
+      System.out.println(onlineUsers.toString());
+      SwingUtilities.invokeLater(() -> clientView.updateBoards(onlineUsers.indexOf(playerName)));
       this.flag = 2;
     }
   }
@@ -101,7 +106,7 @@ public class ClientModel {
     this.clientView = clientView;
   }
 
-  public JPanel getBoard() {
+  public Board getBoard() {
     return playerBoard;
   }
 
@@ -115,5 +120,21 @@ public class ClientModel {
 
   public ArrayList<Board> getBoards() {
     return boards;
+  }
+
+  public int getCurrentShip() {
+    return currentShipIndex;
+  }
+
+  public void setCurrentShip(int currentShipIndex) {
+    this.currentShipIndex = currentShipIndex;
+  }
+
+  public ArrayList<Ship> getShips() {
+    return logicBoard.ships;
+  }
+
+  public int[][] getLogicMatrix() {
+    return logicBoard.logicMatrix;
   }
 }

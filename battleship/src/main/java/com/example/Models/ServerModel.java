@@ -11,7 +11,6 @@ import com.example.Views.ServerView;
 
 public class ServerModel {
   private ArrayList<String> onlineUsers = new ArrayList<>();
-  private ArrayList<String> shipsDestroyed = new ArrayList<>();
   private ServerSocket serverSocket;
   private ServerView serverView;
   private int serverPort;
@@ -37,7 +36,7 @@ public class ServerModel {
   }
 
   public void addOnlineUser(String playerName) {
-    onlineUsers.add(playerName + "\n");
+    onlineUsers.add(playerName);
     serverView.updateUsers();
   }
 

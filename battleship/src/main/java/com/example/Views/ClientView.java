@@ -19,7 +19,9 @@ public class ClientView {
   private ClientModel clientModel;
   private Font font = new Font("Arial", Font.PLAIN, 12);
   private ArrayList<String> strings = new ArrayList<>();
+  private ArrayList<Board> boards = new ArrayList<>();
   private JLabel lblStatus;
+  public int flag = 0;
 
   public ClientView(ClientModel clientModel) {
     this.clientModel = clientModel;
@@ -142,6 +144,10 @@ public class ClientView {
     return serverPort;
   }
 
+  public ArrayList<Board> getBoards() {
+    return boards;
+  }
+
   public void updateInfoPort() {
     try {
       strings.add(1, "<b>Puerto:</b> " + clientModel.getPort() + "<br><b>IP Servidor:</b> "
@@ -161,9 +167,12 @@ public class ClientView {
     infoArea.setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(3));
   }
 
-  public void updateBoards() {
+  public void updateBoards(int index) {
+    boards = clientModel.getBoards();
+    boards.get(index).addListenerBoard();
     for (Board board : clientModel.getBoards()) {
       gamePanel.add(board);
+      gamePanel.setComponentZOrder(board, 0);
     }
     lblStatus.setText("Coloca tus Barcos!!");
     gamePanel.revalidate();
@@ -176,8 +185,10 @@ public class ClientView {
 
     if (parent instanceof JFrame) {
       ((JFrame) parent).pack();
+      ((JFrame) parent).setLocationRelativeTo(null);
     } else {
       System.out.println("JFrame no encontrado");
     }
+    flag = 2;
   }
 }
