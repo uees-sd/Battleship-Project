@@ -3,19 +3,12 @@ package com.example.Views;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.LineBorder;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseListener;
 import java.awt.*;
 
 public class Board extends JPanel {
   private JLabel boardTitle;
   public Cell[][] cells;
   public LogicBoard logicBoard;
-  private int currentShipIndex = 0;
-  private int length = 5;
 
   public Board(LogicBoard logicBoard) {
     this.logicBoard = logicBoard;
@@ -55,6 +48,10 @@ public class Board extends JPanel {
     boardTitle.setText(title);
   }
 
+  public String getBoardTitle() {
+    return boardTitle.getText();
+  }
+
   public class Cell extends JPanel {
     public PointXY coord; // Todas las casillas tendrán coordenadas
     public Border originalBorder;
@@ -78,109 +75,6 @@ public class Board extends JPanel {
     public void highlight(boolean highlight) {
       setBorder(highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true) : originalBorder);
     }
-  }
-
-  public void addListenerBoard() {
-    for (int i = 0; i < 10; i++) {
-      for (int j = 0; j < 10; j++) {
-        Cell cell = cells[i][j];
-        cell.addMouseListener(new ButtonClickListener(cell.coord));
-        System.out.println("Listener added to cell: " + i + ", " + j);
-      }
-    }
-  }
-
-  public class ButtonClickListener implements ActionListener, MouseListener {
-    private final int row;
-    private final int col;
-    private int size = 5;
-    private int[][] logicMatrix = logicBoard.logicMatrix;
-
-    public ButtonClickListener(PointXY coord) {
-      this.row = coord.x;
-      this.col = coord.y;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-
-    }
-
-    @Override
-    public void mouseEntered(java.awt.event.MouseEvent e) {
-      if (currentShipIndex < size) {
-
-        if (canPlaceShip(row, col, length)) {
-          highlightShip(row, col, length, true);
-        }
-      }
-    }
-
-    @Override
-    public void mouseExited(java.awt.event.MouseEvent e) {
-      if (currentShipIndex < size) {
-        if (canPlaceShip(row, col, length)) {
-          highlightShip(row, col, length, false);
-        }
-      }
-    }
-
-    private boolean canPlaceShip(int row, int col, int length) {
-      if (col + length > 10)
-        return false;
-      for (int i = 0; i < length; i++) {
-        if (logicMatrix[row][col + i] != 0)
-          return false;
-      }
-      return true;
-    }
-
-    private void highlightShip(int row, int col, int length, boolean highlight) {
-      for (int i = 0; i < length; i++) {
-        Cell cell = cells[row][col + i];
-        cell.highlight(highlight);
-        // cell.setBorder(
-        // highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true) :
-        // UIManager.getBorder("Panel.border"));
-
-      }
-    }
-
-    private void placeShip(int row, int col, int length) {
-      Ship ship = new Ship(length);
-      for (int i = 0; i < length; i++) {
-        Cell cell = cells[row][col + i];
-        cell.setBackground(Color.BLACK);
-        cell.setEnabled(false);
-        ship.addCoords(cell.coord);
-      }
-      logicBoard.addShip(ship);
-    }
-
-    @Override
-    public void mouseClicked(java.awt.event.MouseEvent e) {
-      if (currentShipIndex < size) {
-        if (canPlaceShip(row, col, length)) {
-          System.out.println("Ship placed at: " + row + ", " + col);
-          placeShip(row, col, length);
-          currentShipIndex++;
-          length--;
-        }
-
-        if (currentShipIndex >= size) {
-
-        }
-      }
-    }
-
-    @Override
-    public void mousePressed(java.awt.event.MouseEvent e) {
-    }
-
-    @Override
-    public void mouseReleased(java.awt.event.MouseEvent e) {
-    }
-
   }
 
   /*

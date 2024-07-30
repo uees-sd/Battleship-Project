@@ -1,34 +1,33 @@
 package com.example.Controllers.Comunicacion;
 
 import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Random;
 
-import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import javax.swing.UIManager;
 import com.example.Models.ClientModel;
+import com.example.Models.ClientModel.Status;
 import com.example.Views.Board;
+import com.example.Views.Board.Cell;
 import com.example.Views.ClientView;
+import com.example.Views.LogicBoard;
 import com.example.Views.PointXY;
 import com.example.Views.Ship;
-import com.example.Views.Board.Cell;
+import com.example.Interfaces.BoardObserver;
 
 //sender
-public class ClientController {
+public class ClientController implements BoardObserver {
   private JFrame frame;
   private ClientModel clientModel;
   private ClientView clientView;
   private String playerName;
   private int port;
+  private int[] length = { 5, 4, 3, 2, 2 };
+  private int currentShipIndex = 0;
 
   public ClientController() {
     this.clientModel = new ClientModel();
@@ -36,6 +35,7 @@ public class ClientController {
 
     // add the clientView as observer to the Client model
     clientModel.addObserver(clientView);
+    clientModel.addBoardObserver(this);
     // Add action listeners
     clientView.getCreateGame().addActionListener(e -> initGame(1));
     clientView.getJoinGame().addActionListener(e -> initGame(2));
@@ -43,6 +43,7 @@ public class ClientController {
       public void focusGained(java.awt.event.FocusEvent evt) {
         clientView.getPorTextField().setText("");
       }
+
     });
     SwingUtilities.invokeLater(() -> {
       frame = new JFrame();
@@ -103,25 +104,6 @@ public class ClientController {
           }
         });
       });
-
-      // SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-      // @Override
-      // protected Void doInBackground() {
-      // // Wait for the second player to connect
-      // while (clientModel.getOnlineUsers().size() != 2) {
-      // try {
-      // Thread.sleep(200); // Sleep for a short time to avoid busy-waiting
-      // } catch (InterruptedException e) {
-      // Thread.currentThread().interrupt();
-      // }
-      // }
-      // // ddListenerBoard();
-      // return null;
-      // }
-      // };
-
-      // worker.execute();
-      // addListenerBoard();
     } catch (IOException e) {
       String errorMessage = e.getMessage();
       if (errorMessage == null || errorMessage.contains("connection was aborted")) {
@@ -156,116 +138,138 @@ public class ClientController {
     this.port = random.nextInt(6000) + 3001;
   }
 
-  // private void addListenerBoard() {
-  // Board board = clientModel.getBoard();
-  // for (int i = 0; i < 10; i++) {
-  // for (int j = 0; j < 10; j++) {
-  // Cell cell = board.cells[i][j];
-  // cell.addMouseListener(new ButtonClickListener(cell.coord));
-  // System.out.println("Listener added to cell: " + i + ", " + j);
-  // }
-  // }
-  // }
+  @Override
+  public void boardUpdated() {
+    try {
+      if (clientModel.getStatus() == ClientModel.Status.WAITSHIPS) {
+        SwingUtilities.invokeAndWait(() -> clientView.updateBoards(playerName));
+        clientModel.setPlayerBoard(clientView.getMyBoard());
+        clientModel.setLogicBoard();
+        addListenerBoard(clientView.getMyBoard());
+      } else if (clientModel.getStatus() == ClientModel.Status.PLAYING) {
+        System.out.println("hola2");
+        clientView.getMyBoard().desactivarListener();
+        addListenerBoard(clientView.getEnemyBoard());
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
-  // public class ButtonClickListener implements ActionListener, MouseListener {
-  // Cell[][] cells = clientModel.getBoard().getCells();
-  // private final int row;
-  // private final int col;
-  // private int currentShipIndex = clientModel.getCurrentShip();
-  // private ArrayList<Ship> ships = clientModel.getShips();
-  // private int size = ships.size();
-  // private int[][] logicMatrix = clientModel.getLogicMatrix();
+  public void addListenerBoard(Board board) {
+    Cell cells[][] = board.getCells();
+    for (int i = 0; i < 10; i++) {
+      for (int j = 0; j < 10; j++) {
+        Cell cell = cells[i][j];
+        cell.addMouseListener(new ButtonClickListener(cell.coord, board));
+        System.out.println("Listener added to cell: " + i + ", " + j);
+      }
+    }
+  }
 
-  // public ButtonClickListener(PointXY coord) {
-  // this.row = coord.x;
-  // this.col = coord.y;
-  // }
+  public class ButtonClickListener implements MouseListener {
+    private Status status = clientModel.getStatus();
+    private LogicBoard logicBoard;
+    private Cell[][] cells;
+    private final int row;
+    private final int col;
+    private int size = 5;
+    private int[][] logicMatrix;
 
-  // @Override
-  // public void actionPerformed(ActionEvent e) {
-  // Cell cell = cells[row][col];
-  // int currentShipIndex = clientModel.getCurrentShip();
-  // cell.setBackground(Color.BLACK);
+    public ButtonClickListener(PointXY coord, Board board) {
+      this.row = coord.x;
+      this.col = coord.y;
+      this.logicBoard = board.logicBoard;
+      this.cells = board.cells;
+      this.logicMatrix = logicBoard.logicMatrix;
+    }
 
-  // if (currentShipIndex < size) {
-  // Ship currentShip = ships.get(currentShipIndex);
-  // int length = currentShip.getLength();
+    @Override
+    public void mouseEntered(java.awt.event.MouseEvent e) {
+      if (status == Status.WAITSHIPS) {
+        if (currentShipIndex < size) {
+          if (canPlaceShip(row, col, length[currentShipIndex])) {
+            highlightShip(row, col, length[currentShipIndex], true);
+          }
+        }
+      } else if (status == Status.PLAYING) {
+        cells[row][col].highlight(true);
+      }
+    }
 
-  // if (canPlaceShip(row, col, length)) {
-  // System.out.println("Ship placed at: " + row + ", " + col);
-  // placeShip(row, col, length);
-  // currentShipIndex++;
-  // }
+    @Override
+    public void mouseExited(java.awt.event.MouseEvent e) {
+      if (status == Status.WAITSHIPS) {
+        if (currentShipIndex < size) {
+          if (canPlaceShip(row, col, length[currentShipIndex])) {
+            highlightShip(row, col, length[currentShipIndex], false);
+          }
+        }
+      } else if (status == Status.PLAYING) {
+        cells[row][col].highlight(false);
+      }
+    }
 
-  // if (currentShipIndex >= size) {
+    private boolean canPlaceShip(int row, int col, int length) {
+      if (col + length > 10)
+        return false;
+      for (int i = 0; i < length; i++) {
+        if (logicMatrix[row][col + i] != 0)
+          return false;
+      }
+      return true;
+    }
 
-  // }
-  // }
-  // }
+    private void highlightShip(int row, int col, int length, boolean highlight) {
+      for (int i = 0; i < length; i++) {
+        Cell cell = cells[row][col + i];
+        cell.highlight(highlight);
+      }
+    }
 
-  // @Override
-  // public void mouseEntered(java.awt.event.MouseEvent e) {
-  // if (currentShipIndex < size) {
-  // Ship currentShip = ships.get(currentShipIndex);
-  // int length = currentShip.getLength();
+    private void placeShip(int row, int col, int length) {
+      Ship ship = new Ship(length);
+      for (int i = 0; i < length; i++) {
+        Cell cell = cells[row][col + i];
+        cell.setBackground(Color.BLACK);
+        cell.setEnabled(false);
+        ship.addCoords(cell.coord);
+      }
+      logicBoard.addShip(ship);
+    }
 
-  // if (canPlaceShip(row, col, length)) {
-  // SwingUtilities.invokeLater(() -> highlightShip(row, col, length, true));
-  // }
-  // }
-  // }
+    @Override
+    public void mouseClicked(java.awt.event.MouseEvent e) {
+      if (status == Status.WAITSHIPS) {
+        if (currentShipIndex < size) {
+          if (canPlaceShip(row, col, length[currentShipIndex])) {
+            System.out.println("Ship placed at: " + row + ", " + col);
+            placeShip(row, col, length[currentShipIndex]);
+            currentShipIndex++;
+            clientModel.setCurrentShip(currentShipIndex);
+            if (currentShipIndex == size) {
+              try {
+                clientModel.sendBoards();
+                clientView.setLblStatus("Esperando a que el otro jugador coloque sus barcos...");
+              } catch (IOException e1) {
+                e1.printStackTrace();
+              }
+            }
+          }
+        }
+      } else if (status == Status.PLAYING) {
+        cells[row][col].setBackground(Color.GRAY);
+      }
 
-  // @Override
-  // public void mouseExited(java.awt.event.MouseEvent e) {
-  // if (currentShipIndex < size) {
-  // Ship currentShip = ships.get(currentShipIndex);
-  // int length = currentShip.getLength();
+    }
 
-  // if (canPlaceShip(row, col, length)) {
-  // SwingUtilities.invokeLater(() -> highlightShip(row, col, length, false));
-  // }
-  // }
-  // }
+    @Override
+    public void mousePressed(java.awt.event.MouseEvent e) {
+    }
 
-  // private boolean canPlaceShip(int row, int col, int length) {
-  // if (col + length > 10)
-  // return false;
-  // for (int i = 0; i < length; i++) {
-  // if (logicMatrix[row][col + i] != 0)
-  // return false;
-  // }
-  // return true;
-  // }
+    @Override
+    public void mouseReleased(java.awt.event.MouseEvent e) {
+    }
+  }
 
-  // private void highlightShip(int row, int col, int length, boolean highlight) {
-  // for (int i = 0; i < length; i++) {
-  // Cell cell = cells[row][col + i];
-  // SwingUtilities.invokeLater(() -> cell.setBorder(
-  // highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true) :
-  // UIManager.getBorder("Button.border")));
-
-  // }
-  // }
-
-  // private void placeShip(int row, int col, int length) {
-  // for (int i = 0; i < length; i++) {
-  // Cell cell = cells[row][col + i];
-  // cell.setBackground(Color.BLACK);
-  // cell.setEnabled(false);
-  // logicMatrix[row][col + i] = 1;
-  // }
-  // }
-
-  // @Override
-  // public void mouseClicked(java.awt.event.MouseEvent e) {
-  // }
-
-  // @Override
-  // public void mousePressed(java.awt.event.MouseEvent e) {
-  // }
-
-  // @Override
-  // public void mouseReleased(java.awt.event.MouseEvent e) {
-  // }
-  // }
 }

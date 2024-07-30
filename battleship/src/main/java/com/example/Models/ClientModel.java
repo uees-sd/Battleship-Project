@@ -12,6 +12,7 @@ import javax.swing.SwingUtilities;
 import com.example.Views.Ship;
 import com.example.Views.ClientView;
 import com.example.Views.LogicBoard;
+import com.example.Interfaces.BoardObserver;
 import com.example.Views.Board;
 
 @SuppressWarnings("unused")
@@ -19,6 +20,7 @@ import com.example.Views.Board;
 public class ClientModel {
   private ArrayList<String> onlineUsers = new ArrayList<>();
   private ArrayList<Board> boards = new ArrayList<>();
+  private ArrayList<BoardObserver> observers = new ArrayList<>();
   private String serverPort;
   private String playerName;
   private ObjectOutputStream out;
@@ -28,7 +30,12 @@ public class ClientModel {
   private Board playerBoard = new Board(logicBoard);
   private ClientView clientView;
   private int currentShipIndex = 0;
-  public int flag = 0;
+  private int[] length = { 5, 4, 3, 2, 2 };
+  private Status status = Status.WAITPLAYER;
+
+  public enum Status {
+    WAITPLAYER, WAITBOARD, WAITSHIPS, PLAYING, FINISHED
+  }
 
   // Create a new client model and the conecction to the server
   public void connect(String playerName, int serverPort, String serverIp) throws IOException {
@@ -40,7 +47,7 @@ public class ClientModel {
     in = new ObjectInputStream(clientSocket.getInputStream());
     sendName(playerName);
     SwingUtilities.invokeLater(() -> clientView.updateInfoPort());
-    sendBoards(playerBoard);
+    sendBoards();
   }
 
   // Send the attack to the server
@@ -52,23 +59,31 @@ public class ClientModel {
     out.writeObject(message);
   }
 
-  public void sendBoards(JPanel playerBoard) throws IOException {
+  public void sendBoards() throws IOException {
     out.writeObject(playerBoard);
+  }
+
+  public void sendShips() throws IOException {
+    out.writeObject(logicBoard.logicMatrix);
   }
 
   @SuppressWarnings("unchecked")
   public void receiveMessage() throws IOException, ClassNotFoundException {
-    if (this.flag == 0) {
+    if (this.status == Status.WAITPLAYER) {
       onlineUsers = (ArrayList<String>) in.readObject();
       SwingUtilities.invokeLater(() -> clientView.updateInfoUsers());
-      this.flag = 1;
-    } else if (this.flag == 1) {
+      this.status = Status.WAITBOARD;
+    } else if (this.status == Status.WAITBOARD) {
       boards = (ArrayList<Board>) in.readObject();
-      System.out.println(playerName);
-      System.out.println(onlineUsers.size());
-      System.out.println(onlineUsers.toString());
-      SwingUtilities.invokeLater(() -> clientView.updateBoards(onlineUsers.indexOf(playerName)));
-      this.flag = 2;
+      this.status = Status.WAITSHIPS;
+      notifyBoardObservers();
+    } else if (this.status == Status.WAITSHIPS) {
+      String message = (String) in.readObject();
+      clientView.setLblStatus(message);
+      if (message.equals("Comienza el juego")) {
+        this.status = Status.PLAYING;
+        notifyBoardObservers();
+      }
     }
   }
 
@@ -106,6 +121,20 @@ public class ClientModel {
     this.clientView = clientView;
   }
 
+  public void addBoardObserver(BoardObserver observer) {
+    observers.add(observer);
+  }
+
+  public void removeBoardObserver(BoardObserver observer) {
+    observers.remove(observer);
+  }
+
+  private void notifyBoardObservers() {
+    for (BoardObserver observer : observers) {
+      observer.boardUpdated();
+    }
+  }
+
   public Board getBoard() {
     return playerBoard;
   }
@@ -136,5 +165,21 @@ public class ClientModel {
 
   public int[][] getLogicMatrix() {
     return logicBoard.logicMatrix;
+  }
+
+  public int getPlayerIndex() {
+    return onlineUsers.indexOf(playerName);
+  }
+
+  public void setPlayerBoard(Board playerBoard) {
+    this.playerBoard = playerBoard;
+  }
+
+  public void setLogicBoard() {
+    this.logicBoard = playerBoard.logicBoard;
+  }
+
+  public Status getStatus() {
+    return this.status;
   }
 }

@@ -17,6 +17,7 @@ public class ClientHandler implements Runnable {
   private static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
   private static ArrayList<Board> boardUsers = new ArrayList<>();
   private ServerModel serverModel;
+  private static int count = 0;
 
   public ClientHandler(Socket clientSocket, ServerModel serverModel) throws IOException, ClassNotFoundException {
     this.clientSocket = clientSocket;
@@ -55,7 +56,21 @@ public class ClientHandler implements Runnable {
     objectOutputStream.reset();
   }
 
+  public void sendBoards(ArrayList<Board> boards) throws IOException {
+    objectOutputStream.writeObject(boards);
+    objectOutputStream.reset();
+  }
+
   private void broadCastMessage(Object message) throws IOException {
+    if (message instanceof Board) {
+      changeBoards((Board) message);
+      if (count == 0) {
+        sendMessage("En espera del otro jugador");
+        count++;
+      } else if (count == 1) {
+        broadCastMessage("Comienza el juego");
+      }
+    }
     for (ClientHandler clientHandler : clientHandlers) {
       if (message instanceof String) {
         clientHandler.sendMessage((String) message);
@@ -68,15 +83,18 @@ public class ClientHandler implements Runnable {
     objectOutputStream.reset();
   }
 
-  public void sendBoards(ArrayList<Board> boards) throws IOException {
-    objectOutputStream.writeObject(boards);
-    objectOutputStream.reset();
-  }
-
   public void readMessage() throws IOException, ClassNotFoundException {
     while (true) {
       Object object = objectInputStream.readObject();
       broadCastMessage(object);
+    }
+  }
+
+  public void changeBoards(Board board) {
+    for (Board boards : boardUsers) {
+      if (board.getBoardTitle().equals(boards.getBoardTitle())) {
+        boards = board;
+      }
     }
   }
 

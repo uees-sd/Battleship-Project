@@ -19,7 +19,8 @@ public class ClientView {
   private ClientModel clientModel;
   private Font font = new Font("Arial", Font.PLAIN, 12);
   private ArrayList<String> strings = new ArrayList<>();
-  private ArrayList<Board> boards = new ArrayList<>();
+  // private ArrayList<Board> boards = new ArrayList<>();
+  private Board myBoard, enemyBoard;
   private JLabel lblStatus;
   public int flag = 0;
 
@@ -145,7 +146,19 @@ public class ClientView {
   }
 
   public ArrayList<Board> getBoards() {
-    return boards;
+    return null;
+  }
+
+  public Board getMyBoard() {
+    return myBoard;
+  }
+
+  public Board getEnemyBoard() {
+    return enemyBoard;
+  }
+
+  public void setLblStatus(String status) {
+    lblStatus.setText(status);
   }
 
   public void updateInfoPort() {
@@ -167,14 +180,16 @@ public class ClientView {
     infoArea.setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(3));
   }
 
-  public void updateBoards(int index) {
-    boards = clientModel.getBoards();
-    boards.get(index).addListenerBoard();
+  public void updateBoards(String name) {
     for (Board board : clientModel.getBoards()) {
+      if (board.getBoardTitle().equals(name)) {
+        myBoard = board;
+      } else {
+        enemyBoard = board;
+      }
       gamePanel.add(board);
-      gamePanel.setComponentZOrder(board, 0);
     }
-    lblStatus.setText("Coloca tus Barcos!!");
+    setLblStatus("Coloca los barcos!!");
     gamePanel.revalidate();
     gamePanel.repaint();
 

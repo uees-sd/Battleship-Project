@@ -41,6 +41,8 @@ public class LogicBoard implements Serializable {
         logicMatrix[coord.x][coord.y] = 1;
       }
     }
+    System.out.println("Ship added to logicMatrix");
+    System.out.println(logicMatrix.toString());
   }
 
   /*
