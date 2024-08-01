@@ -32,6 +32,8 @@ public class ClientModel {
   private int currentShipIndex = 0;
   private int[] length = { 5, 4, 3, 2, 2 };
   private Status status = Status.WAITPLAYER;
+  private Boolean turn;
+  private int attackCount;
 
   public enum Status {
     WAITPLAYER, WAITBOARD, WAITSHIPS, PLAYING, FINISHED
@@ -84,6 +86,12 @@ public class ClientModel {
         this.status = Status.PLAYING;
         notifyBoardObservers();
       }
+    } else if (this.status == Status.PLAYING) {
+      Object obj = in.readObject();
+      if (obj instanceof String) {
+        turn = !turn;
+        clientView.setLblStatus(turn ? "Es tu turno..." : "Es el turno del oponente...");
+      }
     }
   }
 
@@ -111,6 +119,29 @@ public class ClientModel {
       if (clientSocket.isConnected()) {
         clientSocket.close();
       }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  // Resetear el número de ataques al cambiar de turno.
+  public void resetAttackCount() {
+    attackCount = 0;
+  }
+
+  // Incrementar Ataque
+  public void incrementAttackCount() {
+    attackCount++;
+    if (attackCount == 3) {
+      changeTurn();
+    }
+  }
+
+  // Cambiar de turno
+  public void changeTurn() {
+    resetAttackCount();
+    try {
+      out.writeObject("CHANGE_TURN");
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -181,5 +212,13 @@ public class ClientModel {
 
   public Status getStatus() {
     return this.status;
+  }
+
+  public void setTurn(Boolean turn) {
+    this.turn = turn;
+  }
+
+  public Boolean isTurn() {
+    return this.turn;
   }
 }

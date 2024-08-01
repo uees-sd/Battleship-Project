@@ -68,6 +68,7 @@ public class ClientController implements BoardObserver {
           randomPort();
           new ServerController(port);
           connectToServer("localhost");
+          clientModel.setTurn(true);
         } else {
           clientView.showError("Ingrese su nombre");
         }
@@ -79,6 +80,7 @@ public class ClientController implements BoardObserver {
           String serverIp = parts[0];
           port = Integer.parseInt(parts[1]);
           connectToServer(serverIp);
+          clientModel.setTurn(false);
         } else {
           clientView.showError("Ingrese su nombre y el Puerto válido (cuatro dígitos)");
         }
@@ -147,7 +149,6 @@ public class ClientController implements BoardObserver {
         clientModel.setLogicBoard();
         addListenerBoard(clientView.getMyBoard());
       } else if (clientModel.getStatus() == ClientModel.Status.PLAYING) {
-        System.out.println("hola2");
         clientView.getMyBoard().desactivarListener();
         addListenerBoard(clientView.getEnemyBoard());
       }
@@ -257,8 +258,9 @@ public class ClientController implements BoardObserver {
             }
           }
         }
-      } else if (status == Status.PLAYING) {
+      } else if (status == Status.PLAYING && clientModel.isTurn()) {
         cells[row][col].setBackground(Color.GRAY);
+        clientModel.incrementAttackCount();
       }
 
     }
