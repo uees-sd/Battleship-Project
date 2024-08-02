@@ -32,4 +32,9 @@ public class PointXY implements Serializable {
       return false;
     }
   }
+
+  @Override
+  public String toString() {
+    return "PointXY [x=" + x + ", y=" + y + "]";
+  }
 }

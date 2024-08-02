@@ -7,6 +7,7 @@ import java.io.ObjectInputStream;
 import java.net.Socket;
 import com.example.Models.ServerModel;
 import com.example.Views.Board;
+import com.example.Views.LogicBoard;
 
 public class ClientHandler implements Runnable {
 
@@ -14,6 +15,7 @@ public class ClientHandler implements Runnable {
   private ObjectOutputStream objectOutputStream;
   private Socket clientSocket;
   private String playerName;
+  private LogicBoard logicBoard = new LogicBoard();
   private static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
   private static ArrayList<Board> boardUsers = new ArrayList<>();
   private ServerModel serverModel;
@@ -51,23 +53,40 @@ public class ClientHandler implements Runnable {
     }
   }
 
+  private void broadCastLogicBoards() throws IOException {
+    for (ClientHandler clientHandler : clientHandlers) {
+      if (clientHandler != this) {
+        clientHandler.sendLogicBoard(logicBoard);
+      }
+    }
+  }
+
   private void sendUsers(ArrayList<String> onlineUsers) throws IOException {
     objectOutputStream.writeObject(onlineUsers);
     objectOutputStream.reset();
   }
 
-  public void sendBoards(ArrayList<Board> boards) throws IOException {
+  private void sendBoards(ArrayList<Board> boards) throws IOException {
     objectOutputStream.writeObject(boards);
     objectOutputStream.reset();
   }
 
+  private void sendLogicBoard(LogicBoard logicBoard) throws IOException {
+    objectOutputStream.writeObject(logicBoard);
+    objectOutputStream.reset();
+  }
+
   private void broadCastMessage(Object message) throws IOException {
-    if (message instanceof Board) {
-      changeBoards((Board) message);
+    if (message instanceof LogicBoard) {
+      changeLogicBoard((LogicBoard) message);
       if (count == 0) {
         sendMessage("En espera del otro jugador");
+        broadCastLogicBoards();
         count++;
       } else if (count == 1) {
+        System.out.println(count);
+        broadCastLogicBoards();
+        System.out.println("Se enviaron los tableros");
         broadCastMessage("Comienza el juego");
       }
     }
@@ -90,12 +109,8 @@ public class ClientHandler implements Runnable {
     }
   }
 
-  public void changeBoards(Board board) {
-    for (Board boards : boardUsers) {
-      if (board.getBoardTitle().equals(boards.getBoardTitle())) {
-        boards = board;
-      }
-    }
+  public void changeLogicBoard(LogicBoard logicBoard) {
+    this.logicBoard = logicBoard;
   }
 
   @Override

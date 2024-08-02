@@ -6,34 +6,35 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.example.Views.Ship;
 import com.example.Views.ClientView;
 import com.example.Views.LogicBoard;
-import com.example.Interfaces.BoardObserver;
+import com.example.Interfaces.ModelObserver;
 import com.example.Views.Board;
-
-@SuppressWarnings("unused")
+import com.example.Controllers.Preguntas.QuestionManager;
 
 public class ClientModel {
   private ArrayList<String> onlineUsers = new ArrayList<>();
   private ArrayList<Board> boards = new ArrayList<>();
-  private ArrayList<BoardObserver> observers = new ArrayList<>();
+  private ArrayList<ModelObserver> observers = new ArrayList<>();
   private String serverPort;
   private String playerName;
   private ObjectOutputStream out;
   private ObjectInputStream in;
   private Socket clientSocket;
   private LogicBoard logicBoard = new LogicBoard();
-  private Board playerBoard = new Board(logicBoard);
+  private Board playerBoard = new Board(logicBoard), enemyBoard;
   private ClientView clientView;
   private int currentShipIndex = 0;
-  private int[] length = { 5, 4, 3, 2, 2 };
   private Status status = Status.WAITPLAYER;
   private Boolean turn;
   private int attackCount;
+  private QuestionManager questionManager = new QuestionManager();
+  private String[] currentQuestion;
+  public int barcosHundidos = 0;
+  private LogicBoard enemyLogicBoard;
 
   public enum Status {
     WAITPLAYER, WAITBOARD, WAITSHIPS, PLAYING, FINISHED
@@ -49,7 +50,7 @@ public class ClientModel {
     in = new ObjectInputStream(clientSocket.getInputStream());
     sendName(playerName);
     SwingUtilities.invokeLater(() -> clientView.updateInfoPort());
-    sendBoards();
+    sendBoard();
   }
 
   // Send the attack to the server
@@ -61,12 +62,16 @@ public class ClientModel {
     out.writeObject(message);
   }
 
-  public void sendBoards() throws IOException {
+  public void sendBoard() throws IOException {
     out.writeObject(playerBoard);
   }
 
   public void sendShips() throws IOException {
     out.writeObject(logicBoard.logicMatrix);
+  }
+
+  public void sendLogicBoard() throws IOException {
+    out.writeObject(logicBoard);
   }
 
   @SuppressWarnings("unchecked")
@@ -75,22 +80,32 @@ public class ClientModel {
       onlineUsers = (ArrayList<String>) in.readObject();
       SwingUtilities.invokeLater(() -> clientView.updateInfoUsers());
       this.status = Status.WAITBOARD;
+
     } else if (this.status == Status.WAITBOARD) {
       boards = (ArrayList<Board>) in.readObject();
       this.status = Status.WAITSHIPS;
       notifyBoardObservers();
+
     } else if (this.status == Status.WAITSHIPS) {
-      String message = (String) in.readObject();
-      clientView.setLblStatus(message);
-      if (message.equals("Comienza el juego")) {
-        this.status = Status.PLAYING;
-        notifyBoardObservers();
+      Object obj = in.readObject();
+      if (obj instanceof String) {
+        String message = (String) obj;
+        clientView.setLblStatus(message);
+        if (message.equals("Comienza el juego")) {
+          this.status = Status.PLAYING;
+          notifyBoardObservers();
+          notifyChangeTurn();
+        }
+      } else if (obj instanceof LogicBoard) {
+        enemyLogicBoard = (LogicBoard) obj;
+        System.out.println("Tamaño Logic Board" + enemyLogicBoard.ships.size());
       }
     } else if (this.status == Status.PLAYING) {
       Object obj = in.readObject();
       if (obj instanceof String) {
         turn = !turn;
         clientView.setLblStatus(turn ? "Es tu turno..." : "Es el turno del oponente...");
+        notifyChangeTurn();
       }
     }
   }
@@ -147,27 +162,56 @@ public class ClientModel {
     }
   }
 
+  // Hacer pregunta
+  public void genQuestion() {
+    currentQuestion = questionManager.getRandomQuestion();
+  }
+
+  // Verificar respuesta
+  public void checkAnswer(int answerIndex) {
+    Boolean correct = questionManager.checkQuestion(currentQuestion, answerIndex);
+    if (!correct) {
+      changeTurn();
+    } else {
+      clientView.setLblStatus("Respuesta correcta, sigue atacando...");
+    }
+  }
+
   // Obersver pattern to update the view
   public void addObserver(ClientView clientView) {
     this.clientView = clientView;
   }
 
-  public void addBoardObserver(BoardObserver observer) {
+  public void addBoardObserver(ModelObserver observer) {
     observers.add(observer);
   }
 
-  public void removeBoardObserver(BoardObserver observer) {
+  public void removeBoardObserver(ModelObserver observer) {
     observers.remove(observer);
   }
 
+  public LogicBoard getEnemyLogicBoard() {
+    return enemyLogicBoard;
+  }
+
   private void notifyBoardObservers() {
-    for (BoardObserver observer : observers) {
+    for (ModelObserver observer : observers) {
       observer.boardUpdated();
+    }
+  }
+
+  private void notifyChangeTurn() {
+    for (ModelObserver observer : observers) {
+      observer.turnChanged();
     }
   }
 
   public Board getBoard() {
     return playerBoard;
+  }
+
+  public Board getEnemyBoard() {
+    return enemyBoard;
   }
 
   public String getPort() {
@@ -220,5 +264,9 @@ public class ClientModel {
 
   public Boolean isTurn() {
     return this.turn;
+  }
+
+  public String[] getQuestion() {
+    return currentQuestion;
   }
 }

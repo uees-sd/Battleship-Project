@@ -1,4 +1,4 @@
-package com.example;
+package com.example.Controllers.Preguntas;
 
 import java.sql.*;
 
@@ -21,7 +21,7 @@ public class ConexionBD {
             String url = "jdbc:postgresql://localhost:5432/" + nombre;
 
             // Establecer la conexión utilizando DriverManager
-            con = DriverManager.getConnection(url, "", "");
+            con = DriverManager.getConnection(url, "asve", "asdf");
             checkForWarning(con.getWarnings());
 
             // Obtener metadatos de la base de datos

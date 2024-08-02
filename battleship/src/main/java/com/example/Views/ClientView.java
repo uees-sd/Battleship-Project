@@ -22,7 +22,6 @@ public class ClientView {
   // private ArrayList<Board> boards = new ArrayList<>();
   private Board myBoard, enemyBoard;
   private JLabel lblStatus;
-  public int flag = 0;
 
   public ClientView(ClientModel clientModel) {
     this.clientModel = clientModel;
@@ -157,6 +156,11 @@ public class ClientView {
     return enemyBoard;
   }
 
+  public void setEnemyBoard(Board enemyBoard) {
+    System.out.println("set enemyboard");
+    this.enemyBoard = enemyBoard;
+  }
+
   public void setLblStatus(String status) {
     lblStatus.setText(status);
   }
@@ -204,6 +208,29 @@ public class ClientView {
     } else {
       System.out.println("JFrame no encontrado");
     }
-    flag = 2;
+  }
+
+  public int showQuestion(String[] question) {
+    if (question == null || question.length < 6) {
+      JOptionPane.showMessageDialog(null, "Pregunta inválida o insuficientes opciones", "Error",
+          JOptionPane.ERROR_MESSAGE);
+      return -1;
+    }
+
+    String[] options = new String[] { question[1], question[2], question[3], question[4] };
+
+    int respuesta = -1;
+    do {
+      respuesta = JOptionPane.showOptionDialog(
+          null,
+          question[0],
+          "Pregunta",
+          JOptionPane.DEFAULT_OPTION,
+          JOptionPane.QUESTION_MESSAGE,
+          null,
+          options,
+          null);
+    } while (respuesta == -1);
+    return respuesta;
   }
 }

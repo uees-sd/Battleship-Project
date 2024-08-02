@@ -17,10 +17,10 @@ import com.example.Views.ClientView;
 import com.example.Views.LogicBoard;
 import com.example.Views.PointXY;
 import com.example.Views.Ship;
-import com.example.Interfaces.BoardObserver;
+import com.example.Interfaces.ModelObserver;
 
 //sender
-public class ClientController implements BoardObserver {
+public class ClientController implements ModelObserver {
   private JFrame frame;
   private ClientModel clientModel;
   private ClientView clientView;
@@ -150,10 +150,22 @@ public class ClientController implements BoardObserver {
         addListenerBoard(clientView.getMyBoard());
       } else if (clientModel.getStatus() == ClientModel.Status.PLAYING) {
         clientView.getMyBoard().desactivarListener();
+        System.out.println("set enemyboard controller");
+        clientView.getEnemyBoard().logicBoard = clientModel.getEnemyLogicBoard();
+        System.out.println(clientView.getEnemyBoard().logicBoard.ships.size());
         addListenerBoard(clientView.getEnemyBoard());
       }
     } catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  @Override
+  public void turnChanged() {
+    if (clientModel.isTurn()) {
+      clientModel.genQuestion();
+      int index = clientView.showQuestion(clientModel.getQuestion());
+      clientModel.checkAnswer(index);
     }
   }
 
@@ -193,7 +205,7 @@ public class ClientController implements BoardObserver {
             highlightShip(row, col, length[currentShipIndex], true);
           }
         }
-      } else if (status == Status.PLAYING) {
+      } else if (status == Status.PLAYING && clientModel.isTurn()) {
         cells[row][col].highlight(true);
       }
     }
@@ -206,7 +218,7 @@ public class ClientController implements BoardObserver {
             highlightShip(row, col, length[currentShipIndex], false);
           }
         }
-      } else if (status == Status.PLAYING) {
+      } else if (status == Status.PLAYING && clientModel.isTurn()) {
         cells[row][col].highlight(false);
       }
     }
@@ -232,7 +244,7 @@ public class ClientController implements BoardObserver {
       Ship ship = new Ship(length);
       for (int i = 0; i < length; i++) {
         Cell cell = cells[row][col + i];
-        cell.setBackground(Color.BLACK);
+        cell.setBackground(Color.GRAY);
         cell.setEnabled(false);
         ship.addCoords(cell.coord);
       }
@@ -244,13 +256,12 @@ public class ClientController implements BoardObserver {
       if (status == Status.WAITSHIPS) {
         if (currentShipIndex < size) {
           if (canPlaceShip(row, col, length[currentShipIndex])) {
-            System.out.println("Ship placed at: " + row + ", " + col);
             placeShip(row, col, length[currentShipIndex]);
             currentShipIndex++;
             clientModel.setCurrentShip(currentShipIndex);
             if (currentShipIndex == size) {
               try {
-                clientModel.sendBoards();
+                clientModel.sendLogicBoard();
                 clientView.setLblStatus("Esperando a que el otro jugador coloque sus barcos...");
               } catch (IOException e1) {
                 e1.printStackTrace();
@@ -259,7 +270,17 @@ public class ClientController implements BoardObserver {
           }
         }
       } else if (status == Status.PLAYING && clientModel.isTurn()) {
-        cells[row][col].setBackground(Color.GRAY);
+        if (logicBoard.evaluateShot(new PointXY(row, col))) {
+          clientModel.barcosHundidos++;
+          if (clientModel.barcosHundidos == 5) {
+            clientView.setLblStatus("Has ganado!");
+          }
+        }
+        if (logicMatrix[row][col] == 2) {
+          cells[row][col].setBackground(Color.RED);
+        } else if (logicMatrix[row][col] == 3) {
+          cells[row][col].setBackground(Color.BLUE);
+        }
         clientModel.incrementAttackCount();
       }
 

@@ -1,5 +1,7 @@
 package com.example.Interfaces;
 
-public interface BoardObserver {
+public interface ModelObserver {
   void boardUpdated();
+
+  void turnChanged();
 }
