@@ -4,7 +4,10 @@ import java.awt.Color;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Random;
 
 import javax.swing.JFrame;
@@ -35,7 +38,7 @@ public class ClientController implements ModelObserver {
 
     // add the clientView as observer to the Client model
     clientModel.addObserver(clientView);
-    clientModel.addBoardObserver(this);
+    clientModel.setModelObserver(this);
     // Add action listeners
     clientView.getCreateGame().addActionListener(e -> initGame(1));
     clientView.getJoinGame().addActionListener(e -> initGame(2));
@@ -55,7 +58,6 @@ public class ClientController implements ModelObserver {
       frame.pack();
       frame.setLocationRelativeTo(null);
       frame.setVisible(true);
-      System.out.println("- - - Muestra main panel - - -");
     });
   }
 
@@ -75,7 +77,6 @@ public class ClientController implements ModelObserver {
         break;
       case 2:
         if (isValidPlayerName(playerName) && isValidPort()) {
-          System.out.println();
           String[] parts = clientView.getServerPort().split(":");
           String serverIp = parts[0];
           port = Integer.parseInt(parts[1]);
@@ -102,7 +103,11 @@ public class ClientController implements ModelObserver {
         frame.addWindowListener(new WindowAdapter() {
           @Override
           public void windowClosing(WindowEvent e) {
-            clientModel.disconnect();
+            try {
+              clientModel.sendMessage(playerName + " ha abandonado la partida");
+            } catch (IOException e1) {
+              e1.printStackTrace();
+            }
           }
         });
       });
@@ -115,7 +120,6 @@ public class ClientController implements ModelObserver {
         e.printStackTrace();
       }
     }
-    System.out.println("- - - connected - - -");
   }
 
   private boolean isValidPort() {
@@ -123,14 +127,11 @@ public class ClientController implements ModelObserver {
     int serverPort = Integer.parseInt(parts[1]);
     try {
       if (serverPort >= 3001 && serverPort <= 8999) {
-        System.out.println("port: " + serverPort);
         return true;
       } else {
-        System.out.println("El puerto debe tener exactamente cuatro dígitos.");
         return false;
       }
     } catch (NumberFormatException e) {
-      System.out.println("La cadena no representa un número válido.");
       return false;
     }
   }
@@ -150,9 +151,7 @@ public class ClientController implements ModelObserver {
         addListenerBoard(clientView.getMyBoard());
       } else if (clientModel.getStatus() == ClientModel.Status.PLAYING) {
         clientView.getMyBoard().desactivarListener();
-        System.out.println("set enemyboard controller");
         clientView.getEnemyBoard().logicBoard = clientModel.getEnemyLogicBoard();
-        System.out.println(clientView.getEnemyBoard().logicBoard.ships.size());
         addListenerBoard(clientView.getEnemyBoard());
       }
     } catch (Exception e) {
@@ -162,10 +161,52 @@ public class ClientController implements ModelObserver {
 
   @Override
   public void turnChanged() {
-    if (clientModel.isTurn()) {
+    if (clientModel.isTurn() && clientModel.getStatus() == ClientModel.Status.PLAYING) {
       clientModel.genQuestion();
       int index = clientView.showQuestion(clientModel.getQuestion());
       clientModel.checkAnswer(index);
+    }
+  }
+
+  @Override
+  public void shipSunkUpdated(ArrayList<String> sunkShips) {
+    clientView.updateInfoShips(sunkShips);
+  }
+
+  @Override
+  public void gameFinished(String message) {
+    clientView.showWinner(message);
+    clientModel.disconnect();
+    restartApplication();
+  }
+
+  private void restartApplication() {
+    try {
+      // Obtener el nombre del JAR
+      String jarPath = "target/battleship-1.0-SNAPSHOT-jar-with-dependecies.jar";
+      String command = String.format("java -jar %s", jarPath);
+
+      // Ejecutar el comando para reiniciar la aplicación
+      Process process = Runtime.getRuntime().exec(command);
+
+      // Leer la salida y errores del proceso
+      BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+      BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+      String line;
+      while ((line = reader.readLine()) != null) {
+        System.out.println(line);
+      }
+      while ((line = errorReader.readLine()) != null) {
+        System.err.println(line);
+      }
+
+      // Esperar a que el proceso termine
+      process.waitFor();
+
+      // Salir de la aplicación actual
+      System.exit(0);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 
@@ -175,7 +216,6 @@ public class ClientController implements ModelObserver {
       for (int j = 0; j < 10; j++) {
         Cell cell = cells[i][j];
         cell.addMouseListener(new ButtonClickListener(cell.coord, board));
-        System.out.println("Listener added to cell: " + i + ", " + j);
       }
     }
   }
@@ -205,7 +245,7 @@ public class ClientController implements ModelObserver {
             highlightShip(row, col, length[currentShipIndex], true);
           }
         }
-      } else if (status == Status.PLAYING && clientModel.isTurn()) {
+      } else if (status == Status.PLAYING && clientModel.isTurn() && logicMatrix[row][col] < 2) {
         cells[row][col].highlight(true);
       }
     }
@@ -262,18 +302,31 @@ public class ClientController implements ModelObserver {
             if (currentShipIndex == size) {
               try {
                 clientModel.sendLogicBoard();
-                clientView.setLblStatus("Esperando a que el otro jugador coloque sus barcos...");
               } catch (IOException e1) {
                 e1.printStackTrace();
               }
             }
           }
         }
-      } else if (status == Status.PLAYING && clientModel.isTurn()) {
-        if (logicBoard.evaluateShot(new PointXY(row, col))) {
-          clientModel.barcosHundidos++;
-          if (clientModel.barcosHundidos == 5) {
-            clientView.setLblStatus("Has ganado!");
+      } else if (status == Status.PLAYING && clientModel.isTurn() && logicMatrix[row][col] < 2) {
+        PointXY pointXY = new PointXY(row, col);
+        try {
+          clientModel.sendAttack(pointXY);
+        } catch (IOException e1) {
+          e1.printStackTrace();
+        }
+        if (logicBoard.evaluateShot(pointXY)) {
+          try {
+            clientModel.addSunkenShip();
+          } catch (IOException e1) {
+            e1.printStackTrace();
+          }
+          if (clientModel.getSunkenInt() == 5) {
+            try {
+              clientModel.sendMessage(playerName + " ha ganado la partida");
+            } catch (IOException e1) {
+              e1.printStackTrace();
+            }
           }
         }
         if (logicMatrix[row][col] == 2) {

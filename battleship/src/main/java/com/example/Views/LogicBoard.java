@@ -34,16 +34,12 @@ public class LogicBoard implements Serializable {
    */
   public void addShip(Ship ship) {
     ships.add(ship);
-    System.out.println("Añadiendo barco");
     // Modificamos el logicMatrix según coordenadas con el nuevo Ship
     for (PointXY coord : ship.coords) {
       if (coord.x >= 0 && coord.x < logicMatrix.length && coord.y >= 0 && coord.y < logicMatrix[0].length) {
-        System.out.println("Coordenadas: " + coord.x + " " + coord.y);
         logicMatrix[coord.x][coord.y] = 1;
       }
     }
-    System.out.println("Ship added to logicMatrix");
-    System.out.println(ships.size());
   }
 
   /*
@@ -63,23 +59,35 @@ public class LogicBoard implements Serializable {
         disparo.y < logicMatrix[0].length) {
       // De entrada consideramos el disparo como fallido
       logicMatrix[disparo.x][disparo.y] = 3;
-
       /*
        * Ahora recorremos los Ships y comprobamos si alguno tiene
        * coordenada coincidente con el disparo.
        * Si coincide, corregimos el valor del logicMatrix
        * para la coordenada del disparo
        */
+
+      System.out.println(ships.toString());
       for (Ship ship : ships) {
         if (ship.evaluateShot(disparo)) {
           logicMatrix[disparo.x][disparo.y] = 2; // El disparo ha tocado Ship
-        }
-        if (ship.esHundido()) {
-          return true;
+          if (ship.esHundido()) {
+            return true;
+          }
         }
       }
     }
     // Si el bucle no ha retornado true, el disparo se ha confirmado como fallido
     return false;
+  }
+
+  public String toString() {
+    String str = "";
+    for (int i = 0; i < logicMatrix.length; i++) {
+      for (int j = 0; j < logicMatrix[0].length; j++) {
+        str += logicMatrix[i][j] + " ";
+      }
+      str += "\n";
+    }
+    return str;
   }
 }

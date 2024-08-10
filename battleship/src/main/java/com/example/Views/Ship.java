@@ -6,10 +6,12 @@ import java.util.ArrayList;
 public class Ship implements Serializable {
     private final int length;
     public ArrayList<PointXY> coords;
+    private int touchedCount;
 
     public Ship(int length) {
         this.length = length;
         coords = new ArrayList<>();
+        touchedCount = 0;
     }
 
     public void addCoords(PointXY coord) {
@@ -20,6 +22,8 @@ public class Ship implements Serializable {
         for (PointXY coord : coords) {
             if (coord.equals(disparo)) {
                 coord.setTouched(true);
+                System.out.println("Barco tocado de length " + length + "tocado en " + coord);
+                touchedCount++;
                 return true;
             }
         }
@@ -32,13 +36,13 @@ public class Ship implements Serializable {
     }
 
     public boolean esHundido() {
-        for (PointXY coord : coords) {
-            if (!coord.isTouched()) { // Al menos una coordenada no ha sido tocada
-                return false; // Barco no está hundido
-            }
-        }
-        // Si durante el bucle for no se ha devuelto false, es que todas las coord. han
-        // sido tocadas
-        return true; // Barco hundido
+        System.out.println("Touched count: " + touchedCount + " length: " + length);
+        return touchedCount == length;
+    }
+
+    @Override
+    public String toString() {
+        // Devuelve la longitud del barco y sus coordenadas con sus valors x y y
+        return "Ship [length=" + length + ", coords=" + coords + "]";
     }
 }

@@ -1,8 +1,6 @@
 package com.example.Views;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 
 import com.example.Models.ClientModel;
 
@@ -10,6 +8,7 @@ import java.awt.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ClientView {
   private JPanel clientPanel, connectionPanel, infoPanel, gamePanel;
@@ -75,8 +74,6 @@ public class ClientView {
   private void initInfoPanel() {
     lblStatus = new JLabel("Iniciando Partida");
     infoPanel = new JPanel();
-    infoPanel.setBorder(
-        BorderFactory.createCompoundBorder(new EmptyBorder(20, 60, 20, 60), new LineBorder(Color.MAGENTA, 2)));
     infoPanel.setLayout(new BorderLayout());
     infoArea = new JTextPane();
     infoArea.setFont(font);
@@ -92,8 +89,6 @@ public class ClientView {
   private void initGamePanel() {
     gamePanel = new JPanel();
     gamePanel.setLayout(new BoxLayout(gamePanel, BoxLayout.X_AXIS));
-    gamePanel
-        .setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(20, 60, 20, 60), new LineBorder(Color.BLACK, 2)));
     gamePanel.add(infoPanel);
   }
 
@@ -114,6 +109,10 @@ public class ClientView {
 
   public void showError(String message) {
     JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
+  }
+
+  public void showWinner(String winner) {
+    JOptionPane.showMessageDialog(null, winner, "Fin de la partida", JOptionPane.INFORMATION_MESSAGE);
   }
 
   public JPanel getClientPanel() {
@@ -157,7 +156,6 @@ public class ClientView {
   }
 
   public void setEnemyBoard(Board enemyBoard) {
-    System.out.println("set enemyboard");
     this.enemyBoard = enemyBoard;
   }
 
@@ -181,7 +179,16 @@ public class ClientView {
       sb.append(user).append("<br>");
     }
     strings.add(2, sb.toString());
-    infoArea.setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(3));
+    strings.add(3, "<br>");
+    strings.add(4, "<br>");
+    infoArea.setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(5));
+  }
+
+  public void updateInfoShips(ArrayList<String> shipSunk) {
+    strings.set(3, shipSunk.get(0));
+    strings.set(4, shipSunk.get(1));
+    infoArea
+        .setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(3) + strings.get(4) + strings.get(5));
   }
 
   public void updateBoards(String name) {
@@ -211,13 +218,15 @@ public class ClientView {
   }
 
   public int showQuestion(String[] question) {
-    if (question == null || question.length < 6) {
-      JOptionPane.showMessageDialog(null, "Pregunta inválida o insuficientes opciones", "Error",
-          JOptionPane.ERROR_MESSAGE);
-      return -1;
+    List<String> optionsList = new ArrayList<>();
+
+    for (int i = 1; i <= 4; i++) {
+      if (question[i] != null) {
+        optionsList.add(question[i]);
+      }
     }
 
-    String[] options = new String[] { question[1], question[2], question[3], question[4] };
+    String[] options = optionsList.toArray(new String[0]);
 
     int respuesta = -1;
     do {

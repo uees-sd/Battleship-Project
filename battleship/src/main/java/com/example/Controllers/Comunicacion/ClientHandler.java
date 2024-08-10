@@ -2,12 +2,15 @@ package com.example.Controllers.Comunicacion;
 
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+
 import com.example.Models.ServerModel;
 import com.example.Views.Board;
 import com.example.Views.LogicBoard;
+import com.example.Views.PointXY;
 
 public class ClientHandler implements Runnable {
 
@@ -18,8 +21,10 @@ public class ClientHandler implements Runnable {
   private LogicBoard logicBoard = new LogicBoard();
   private static ArrayList<ClientHandler> clientHandlers = new ArrayList<>();
   private static ArrayList<Board> boardUsers = new ArrayList<>();
+  private static ArrayList<String> sunkShipsText = new ArrayList<>();
   private ServerModel serverModel;
   private static int count = 0;
+  private Boolean running = true;
 
   public ClientHandler(Socket clientSocket, ServerModel serverModel) throws IOException, ClassNotFoundException {
     this.clientSocket = clientSocket;
@@ -33,7 +38,7 @@ public class ClientHandler implements Runnable {
 
     serverModel.addOnlineUser(playerName);
     boardUsers.add((Board) objectInputStream.readObject());
-
+    sunkShipsText.add("<b>Barcos Hundidos de " + playerName + ": </b> 0 <br>");
     if (clientHandlers.size() == 2) {
       broadCastUsers(serverModel.getOnlineUsers());
       broadCastBoards();
@@ -76,6 +81,18 @@ public class ClientHandler implements Runnable {
     objectOutputStream.reset();
   }
 
+  private void sendSunkShips(ArrayList<String> message) throws IOException {
+    objectOutputStream.writeObject(message);
+    objectOutputStream.reset();
+  }
+
+  private void closeAllConnections() {
+    for (ClientHandler clientHandler : clientHandlers) {
+      clientHandler.closeConnection();
+    }
+  }
+
+  @SuppressWarnings("unchecked")
   private void broadCastMessage(Object message) throws IOException {
     if (message instanceof LogicBoard) {
       changeLogicBoard((LogicBoard) message);
@@ -84,17 +101,41 @@ public class ClientHandler implements Runnable {
         broadCastLogicBoards();
         count++;
       } else if (count == 1) {
-        System.out.println(count);
+        broadCastMessage(sunkShipsText);
         broadCastLogicBoards();
-        System.out.println("Se enviaron los tableros");
         broadCastMessage("Comienza el juego");
       }
+      return;
     }
     for (ClientHandler clientHandler : clientHandlers) {
       if (message instanceof String) {
-        clientHandler.sendMessage((String) message);
+        String obj = (String) message;
+        if (obj.equals("CHANGE_TURN") || obj.equals("Comienza el juego") || obj.contains("ha ganado")
+            || obj.contains("ha abandonado")) {
+          System.out.println("Mensaje: " + obj);
+          clientHandler.sendMessage(obj);
+        } else if (obj.toString().contains("Barcos Hundidos de")) {
+          sunkShipsText.set(serverModel.getOnlineUsers().indexOf(playerName), obj);
+          broadCastMessage(sunkShipsText);
+        }
+      } else if (message instanceof PointXY && clientHandler != this) {
+        clientHandler.sendAttack((PointXY) message);
+        return;
+      } else if (message instanceof ArrayList) {
+        clientHandler.sendSunkShips((ArrayList<String>) message);
+        return;
       }
     }
+    if (message instanceof String && (((String) message).contains("ha ganado"))
+        || ((String) message).contains("ha abandonado")) {
+      running = false;
+      closeAllConnections(); // Cierra todas las conexiones después de enviar el mensaje
+    }
+  }
+
+  public void sendAttack(PointXY pointXY) throws IOException {
+    objectOutputStream.writeObject(pointXY);
+    objectOutputStream.reset();
   }
 
   public void sendMessage(String message) throws IOException {
@@ -103,7 +144,7 @@ public class ClientHandler implements Runnable {
   }
 
   public void readMessage() throws IOException, ClassNotFoundException {
-    while (true) {
+    while (running) {
       Object object = objectInputStream.readObject();
       broadCastMessage(object);
     }
@@ -125,14 +166,17 @@ public class ClientHandler implements Runnable {
 
   private void closeConnection() {
     try {
-      if (clientSocket.isConnected())
+      if (objectOutputStream != null)
+        objectOutputStream.close();
+      if (objectInputStream != null)
+        objectInputStream.close();
+      if (clientSocket != null && !clientSocket.isClosed()) {
         clientSocket.close();
+      }
       clientHandlers.remove(this);
       serverModel.getOnlineUsers().remove(playerName);
-      broadCastMessage(playerName + " se ha desconectado tú ganas!");
     } catch (IOException e) {
       e.printStackTrace();
     }
-
   }
 }

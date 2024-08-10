@@ -27,7 +27,6 @@ public class ServerModel {
       } else {
         clientSocket.close();
       }
-
     }
   }
 

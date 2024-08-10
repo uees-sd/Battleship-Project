@@ -2,6 +2,7 @@ package com.example.Models;
 
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import javax.swing.SwingUtilities;
 import com.example.Views.Ship;
 import com.example.Views.ClientView;
 import com.example.Views.LogicBoard;
+import com.example.Views.PointXY;
 import com.example.Interfaces.ModelObserver;
 import com.example.Views.Board;
 import com.example.Controllers.Preguntas.QuestionManager;
@@ -18,7 +20,7 @@ import com.example.Controllers.Preguntas.QuestionManager;
 public class ClientModel {
   private ArrayList<String> onlineUsers = new ArrayList<>();
   private ArrayList<Board> boards = new ArrayList<>();
-  private ArrayList<ModelObserver> observers = new ArrayList<>();
+  private ModelObserver observer;
   private String serverPort;
   private String playerName;
   private ObjectOutputStream out;
@@ -33,8 +35,9 @@ public class ClientModel {
   private int attackCount;
   private QuestionManager questionManager = new QuestionManager();
   private String[] currentQuestion;
-  public int barcosHundidos = 0;
+  private int sunkenShips = 0;
   private LogicBoard enemyLogicBoard;
+  private Boolean running = true;
 
   public enum Status {
     WAITPLAYER, WAITBOARD, WAITSHIPS, PLAYING, FINISHED
@@ -48,17 +51,17 @@ public class ClientModel {
     clientSocket = new Socket(serverIp, serverPort);
     out = new ObjectOutputStream(clientSocket.getOutputStream());
     in = new ObjectInputStream(clientSocket.getInputStream());
-    sendName(playerName);
+    sendMessage(playerName);
     SwingUtilities.invokeLater(() -> clientView.updateInfoPort());
     sendBoard();
   }
 
   // Send the attack to the server
-  public void sendAttack(int x, int y) throws IOException {
-    out.writeObject(new int[] { x, y });
+  public void sendAttack(PointXY pointXY) throws IOException {
+    out.writeObject(pointXY);
   }
 
-  public void sendName(String message) throws IOException {
+  public void sendMessage(String message) throws IOException {
     out.writeObject(message);
   }
 
@@ -66,47 +69,78 @@ public class ClientModel {
     out.writeObject(playerBoard);
   }
 
-  public void sendShips() throws IOException {
-    out.writeObject(logicBoard.logicMatrix);
-  }
-
   public void sendLogicBoard() throws IOException {
     out.writeObject(logicBoard);
   }
 
+  public void sendSunkShip(String message) throws IOException {
+    out.writeObject(message);
+  }
+
   @SuppressWarnings("unchecked")
   public void receiveMessage() throws IOException, ClassNotFoundException {
-    if (this.status == Status.WAITPLAYER) {
-      onlineUsers = (ArrayList<String>) in.readObject();
-      SwingUtilities.invokeLater(() -> clientView.updateInfoUsers());
-      this.status = Status.WAITBOARD;
+    Object obj = in.readObject();
 
-    } else if (this.status == Status.WAITBOARD) {
-      boards = (ArrayList<Board>) in.readObject();
-      this.status = Status.WAITSHIPS;
-      notifyBoardObservers();
-
-    } else if (this.status == Status.WAITSHIPS) {
-      Object obj = in.readObject();
-      if (obj instanceof String) {
-        String message = (String) obj;
-        clientView.setLblStatus(message);
-        if (message.equals("Comienza el juego")) {
-          this.status = Status.PLAYING;
-          notifyBoardObservers();
-          notifyChangeTurn();
+    if (obj instanceof String) {
+      if (obj.toString().contains("ha abandonado")) {
+        this.status = Status.FINISHED;
+        notifyGameFinished(obj.toString() + "\nTú Ganas");
+      }
+    }
+    switch (this.status) {
+      case WAITPLAYER:
+        if (obj instanceof ArrayList) {
+          onlineUsers = (ArrayList<String>) obj;
+          SwingUtilities.invokeLater(() -> clientView.updateInfoUsers());
+          this.status = Status.WAITBOARD;
         }
-      } else if (obj instanceof LogicBoard) {
-        enemyLogicBoard = (LogicBoard) obj;
-        System.out.println("Tamaño Logic Board" + enemyLogicBoard.ships.size());
-      }
-    } else if (this.status == Status.PLAYING) {
-      Object obj = in.readObject();
-      if (obj instanceof String) {
-        turn = !turn;
-        clientView.setLblStatus(turn ? "Es tu turno..." : "Es el turno del oponente...");
-        notifyChangeTurn();
-      }
+        break;
+
+      case WAITBOARD:
+        if (obj instanceof ArrayList) {
+          boards = (ArrayList<Board>) obj;
+          this.status = Status.WAITSHIPS;
+          notifyBoardObserver();
+        }
+        break;
+
+      case WAITSHIPS:
+        if (obj instanceof String) {
+          String message = (String) obj;
+          clientView.setLblStatus(message);
+          if (message.equals("Comienza el juego")) {
+            this.status = Status.PLAYING;
+            notifyBoardObserver();
+            notifyChangeTurn();
+          }
+        } else if (obj instanceof LogicBoard) {
+          enemyLogicBoard = (LogicBoard) obj;
+        } else if (obj instanceof ArrayList) {
+          notifyShipSunk((ArrayList<String>) obj);
+        }
+        break;
+
+      case PLAYING:
+        if (obj instanceof String) {
+          String message = (String) obj;
+          if (message.equals("CHANGE_TURN")) {
+            turn = !turn;
+            clientView.setLblStatus(turn ? "Es tu turno..." : "Es el turno del oponente...");
+            notifyChangeTurn();
+          } else if (message.contains("ha ganado")) {
+            this.status = Status.FINISHED;
+            notifyGameFinished(message);
+          }
+        } else if (obj instanceof PointXY) {
+          playerBoard.repaintCell((PointXY) obj);
+        } else if (obj instanceof ArrayList) {
+          notifyShipSunk((ArrayList<String>) obj);
+        }
+        break;
+
+      default:
+        // Manejar casos inesperados si es necesario
+        break;
     }
   }
 
@@ -115,12 +149,15 @@ public class ClientModel {
     new Thread(new Runnable() {
       @Override
       public void run() {
-        while (true) {
+        while (running) {
           try {
             receiveMessage();
-          } catch (IOException e) {
-            e.printStackTrace();
+          } catch (EOFException e) {
+            disconnect();
           } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+          } catch (IOException e) {
+            disconnect();
             e.printStackTrace();
           }
         }
@@ -130,8 +167,13 @@ public class ClientModel {
 
   // Disconnect the client from the server
   public void disconnect() {
+    running = false;
     try {
-      if (clientSocket.isConnected()) {
+      if (out != null)
+        out.close();
+      if (in != null)
+        in.close();
+      if (clientSocket != null && !clientSocket.isClosed()) {
         clientSocket.close();
       }
     } catch (IOException e) {
@@ -148,6 +190,7 @@ public class ClientModel {
   public void incrementAttackCount() {
     attackCount++;
     if (attackCount == 3) {
+      System.out.println("changeTurn");
       changeTurn();
     }
   }
@@ -182,28 +225,34 @@ public class ClientModel {
     this.clientView = clientView;
   }
 
-  public void addBoardObserver(ModelObserver observer) {
-    observers.add(observer);
+  public int getSunkenInt() {
+    return sunkenShips;
   }
 
-  public void removeBoardObserver(ModelObserver observer) {
-    observers.remove(observer);
+  public void addSunkenShip() throws IOException {
+    sunkenShips++;
+    sendSunkShip("<b>Barcos Hundidos de " + playerName + ": </b>" + sunkenShips +
+        "<br>");
   }
 
   public LogicBoard getEnemyLogicBoard() {
     return enemyLogicBoard;
   }
 
-  private void notifyBoardObservers() {
-    for (ModelObserver observer : observers) {
-      observer.boardUpdated();
-    }
+  private void notifyBoardObserver() {
+    observer.boardUpdated();
   }
 
   private void notifyChangeTurn() {
-    for (ModelObserver observer : observers) {
-      observer.turnChanged();
-    }
+    observer.turnChanged();
+  }
+
+  private void notifyGameFinished(String winner) {
+    observer.gameFinished(winner);
+  }
+
+  private void notifyShipSunk(ArrayList<String> sunkShips) {
+    observer.shipSunkUpdated(sunkShips);
   }
 
   public Board getBoard() {
@@ -216,6 +265,10 @@ public class ClientModel {
 
   public String getPort() {
     return serverPort;
+  }
+
+  public void setModelObserver(ModelObserver observer) {
+    this.observer = observer;
   }
 
   public ArrayList<String> getOnlineUsers() {
@@ -268,5 +321,9 @@ public class ClientModel {
 
   public String[] getQuestion() {
     return currentQuestion;
+  }
+
+  public String getPlayerName() {
+    return playerName;
   }
 }

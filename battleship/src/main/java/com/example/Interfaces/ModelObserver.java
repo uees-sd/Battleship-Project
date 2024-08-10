@@ -1,7 +1,14 @@
 package com.example.Interfaces;
 
-public interface ModelObserver {
+import java.io.Serializable;
+import java.util.ArrayList;
+
+public interface ModelObserver extends Serializable {
   void boardUpdated();
 
   void turnChanged();
+
+  void shipSunkUpdated(ArrayList<String> sunkShips);
+
+  void gameFinished(String winner);
 }

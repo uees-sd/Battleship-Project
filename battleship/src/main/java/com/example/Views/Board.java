@@ -2,7 +2,6 @@ package com.example.Views;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 
 public class Board extends JPanel {
@@ -15,7 +14,6 @@ public class Board extends JPanel {
     cells = new Cell[10][10];
 
     setLayout(new BorderLayout());
-    setBorder(new LineBorder(Color.cyan, 2));
 
     JPanel gridPanel = new JPanel();
     gridPanel.setLayout(new GridLayout(11, 11));
@@ -70,10 +68,17 @@ public class Board extends JPanel {
       } else {
         setBackground(Color.WHITE);
       }
+
+      /*
+       * public void desactivarList(){
+       * this.removeMouseListener(this.getMouseListeners()[0]);
+       * }
+       */
     }
 
     public void highlight(boolean highlight) {
-      setBorder(highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true) : originalBorder);
+      setBorder(highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true)
+          : originalBorder);
     }
   }
 
@@ -88,5 +93,14 @@ public class Board extends JPanel {
     for (int i = 0; i < 10; i++)
       for (int j = 0; j < 10; j++)
         cells[i][j].removeMouseListener(cells[i][j].getMouseListeners()[0]);
+  }
+
+  // Repintar cuando se actualize el logicBoard
+  public void repaintCell(PointXY pointXY) {
+    if (logicBoard.logicMatrix[pointXY.x][pointXY.y] == 1) {
+      cells[pointXY.x][pointXY.y].setBackground(Color.RED);
+    } else if (logicBoard.logicMatrix[pointXY.x][pointXY.y] == 0) {
+      cells[pointXY.x][pointXY.y].setBackground(Color.BLUE);
+    }
   }
 }
