@@ -1,4 +1,4 @@
-package com.example;
+package com.example.Controllers.Preguntas;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -7,10 +7,10 @@ import java.sql.Statement;
 import javax.swing.JOptionPane;
 
 //CLASE PARA PROBAR LA BD 
-public class Main {
-    public static void main(String[] args) {
-        // Configuración de la conexión a PostgreSQL usando la clase ConexionBD
+public class QuestionManager {
+    public String[] getRandomQuestion() {
         ConexionBD conexion = new ConexionBD("battleship");
+        String[] question = new String[6];
 
         try {
             Connection con = conexion.getConnection(); // Obtener la conexión establecida
@@ -21,14 +21,13 @@ public class Main {
             // Pregunta
             String sqlPregunta = "SELECT pregunta_id, texto FROM Preguntas ORDER BY RANDOM() LIMIT 1";
             ResultSet rsPregunta = stmt.executeQuery(sqlPregunta);
-            String preguntaTexto = null;
             int preguntaId = 0;
             if (rsPregunta.next()) {
                 preguntaId = rsPregunta.getInt("pregunta_id");
-                preguntaTexto = rsPregunta.getString("texto");
+                question[0] = rsPregunta.getString("texto");
             } else {
                 JOptionPane.showMessageDialog(null, "No se encontraron preguntas", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
+                return null;
             }
 
             // Posibles opciones para la pregunta
@@ -36,36 +35,14 @@ public class Main {
                     + " ORDER BY RANDOM()";
             ResultSet rsOpciones = stmt.executeQuery(sqlOpciones);
 
-            String[] opciones = new String[4];
-            Boolean[] correctas = new Boolean[4];
-            int i = 0;
-
+            int i = 1;
             // Procesar las opciones y almacenar los textos corrección
-            while (rsOpciones.next() && i < 4) {
-                opciones[i] = rsOpciones.getString("texto");
-                correctas[i] = rsOpciones.getBoolean("es_correcta");
+            while (rsOpciones.next() && i <= 4) {
+                question[i] = rsOpciones.getString("texto");
+                if (rsOpciones.getBoolean("es_correcta")) {
+                    question[5] = String.valueOf(i - 1);
+                }
                 i++;
-            }
-
-            // Mostrar el JOptionPane con la pregunta y las opciones de respuesta
-            int respuesta = JOptionPane.showOptionDialog(
-                    null,
-                    preguntaTexto,
-                    "Pregunta",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.QUESTION_MESSAGE,
-                    null,
-                    opciones,
-                    null);
-
-            // Verifica opcion correcta
-            if (respuesta >= 0 && respuesta < correctas.length && correctas[respuesta]) {
-                JOptionPane.showMessageDialog(null,
-                        "¡Respuesta correcta! Pregunta respondida correctamente, ahora puedes atacar al enemigo.",
-                        "Resultado", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(null, "Respuesta incorrecta, NO puedes atacar al enemigo.", "Resultado",
-                        JOptionPane.ERROR_MESSAGE);
             }
 
             // Se tiene que cerrar los recursos
@@ -80,5 +57,11 @@ public class Main {
             // Cerrar la conexión
             conexion.cerrarConexion();
         }
+        return question;
+    }
+
+    public Boolean checkQuestion(String[] questionData, int answerIndex) {
+        int correctIndex = Integer.parseInt(questionData[5]);
+        return correctIndex == answerIndex;
     }
 }

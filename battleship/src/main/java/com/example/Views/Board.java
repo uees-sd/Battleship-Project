@@ -1,45 +1,34 @@
 package com.example.Views;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
+import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 
 public class Board extends JPanel {
-  private final int BOARD_SIZE = 10;
   private JLabel boardTitle;
-  private final JButton[][] buttons = new JButton[BOARD_SIZE][BOARD_SIZE];
-  private final int[][] boardMatrix = new int[BOARD_SIZE][BOARD_SIZE];
-  private Ship[] ships = new Ship[] { new Ship(5), new Ship(4), new Ship(3), new Ship(3), new Ship(2) };
-  private int currentShipIndex = 0;
+  public Cell[][] cells;
+  public LogicBoard logicBoard;
 
-  public Board() {
+  public Board(LogicBoard logicBoard) {
+    this.logicBoard = logicBoard;
+    cells = new Cell[10][10];
+
     setLayout(new BorderLayout());
-    setBorder(new LineBorder(Color.cyan, 2));
 
     JPanel gridPanel = new JPanel();
-    gridPanel.setLayout(new GridLayout(BOARD_SIZE + 1, BOARD_SIZE + 1));
+    gridPanel.setLayout(new GridLayout(11, 11));
 
     for (int row = 0; row < 11; row++) {
       for (int col = 0; col < 11; col++) {
         if (row == 0 && col == 0) {
           gridPanel.add(new JLabel(""));
         } else if (row == 0) {
-          gridPanel.add(new JLabel(String.valueOf(col), SwingConstants.CENTER));
+          gridPanel.add(new Cell(null, new JLabel(String.valueOf(col), SwingConstants.CENTER)));
         } else if (col == 0) {
-          gridPanel.add(new JLabel(String.valueOf(row), SwingConstants.CENTER));
+          gridPanel.add(new Cell(null, new JLabel(String.valueOf(row), SwingConstants.CENTER)));
         } else {
-          JButton button = new JButton();
-          button.setBackground(getForeground());
-          button.setForeground(Color.BLACK);
-          button.setFocusable(false);
-          button.addActionListener(new ButtonClickListener(row - 1, col - 1));
-          button.addMouseListener(new ButtonClickListener(row - 1, col - 1));
-          buttons[row - 1][col - 1] = button;
-          gridPanel.add(button);
+          cells[row - 1][col - 1] = new Cell(new PointXY(row - 1, col - 1), null);
+          gridPanel.add(cells[row - 1][col - 1]);
         }
       }
     }
@@ -49,117 +38,69 @@ public class Board extends JPanel {
     add(boardTitle, BorderLayout.NORTH);
   }
 
-  private class ButtonClickListener implements ActionListener, MouseListener {
-    private final int row;
-    private final int col;
-
-    public ButtonClickListener(int row, int col) {
-      this.row = row;
-      this.col = col;
-    }
-
-    @Override
-    public void actionPerformed(ActionEvent e) {
-      JButton button = buttons[row][col];
-      button.setEnabled(false);
-      button.setBackground(Color.BLACK);
-
-      if (currentShipIndex < ships.length) {
-        Ship currentShip = ships[currentShipIndex];
-        int length = currentShip.getLength();
-
-        if (canPlaceShip(row, col, length)) {
-          placeShip(row, col, length);
-          currentShipIndex++;
-        }
-
-        if (currentShipIndex >= ships.length) {
-          // Una vez que se hayan colocado todos los barcos, mostrar la ventana de
-          // preguntas
-          if (Preguntas.askQuestion((JFrame) SwingUtilities.getWindowAncestor(Board.this))) {
-            // Mensaje de éxito
-            JOptionPane.showMessageDialog(Board.this,
-                "Pregunta respondida correctamente, ahora puedes atacar al enemigo.",
-                "Correcto", JOptionPane.INFORMATION_MESSAGE);
-            // Aquí se puede añadir la lógica para atacar al enemigo
-          } else {
-            // Mensaje de error
-            JOptionPane.showMessageDialog(Board.this,
-                "Respuesta incorrecta, no puedes atacar al enemigo.",
-                "Incorrecto", JOptionPane.ERROR_MESSAGE);
-          }
-        }
-      }
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-      // No implementado
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-      // No implementado
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-      // No implementado
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-      if (currentShipIndex < ships.length) {
-        Ship currentShip = ships[currentShipIndex];
-        int length = currentShip.getLength();
-
-        if (canPlaceShip(row, col, length)) {
-          highlightShip(row, col, length, true);
-        }
-      }
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-      if (currentShipIndex < ships.length) {
-        Ship currentShip = ships[currentShipIndex];
-        int length = currentShip.getLength();
-
-        if (canPlaceShip(row, col, length)) {
-          highlightShip(row, col, length, false);
-        }
-      }
-    }
-
-    private boolean canPlaceShip(int row, int col, int length) {
-      if (col + length > BOARD_SIZE)
-        return false;
-      for (int i = 0; i < length; i++) {
-        if (boardMatrix[row][col + i] != 0)
-          return false;
-      }
-      return true;
-    }
-
-    private void highlightShip(int row, int col, int length, boolean highlight) {
-      for (int i = 0; i < length; i++) {
-        JButton button = buttons[row][col + i];
-        button.setBorder(
-            highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true) : UIManager.getBorder("Button.border"));
-      }
-    }
-
-    private void placeShip(int row, int col, int length) {
-      for (int i = 0; i < length; i++) {
-        JButton button = buttons[row][col + i];
-        button.setBackground(Color.BLACK);
-        button.setEnabled(false);
-        boardMatrix[row][col + i] = 1;
-      }
-    }
+  public Cell[][] getCells() {
+    return cells;
   }
 
   public void setBoardTitle(String title) {
     boardTitle.setText(title);
+  }
+
+  public String getBoardTitle() {
+    return boardTitle.getText();
+  }
+
+  public class Cell extends JPanel {
+    public PointXY coord; // Todas las casillas tendrán coordenadas
+    public Border originalBorder;
+
+    public Cell(PointXY coord, JLabel numCell) {
+      this.coord = coord;
+      originalBorder = BorderFactory.createLineBorder(Color.BLACK, 4, true);
+      setPreferredSize(new Dimension(30, 30));
+      setBorder(originalBorder);
+
+      if (numCell != null) {
+        numCell.setFont(new Font("Verdana", Font.BOLD, 12));
+        numCell.setForeground(Color.WHITE);
+        add(numCell);
+        setBackground(new Color(120, 118, 118));
+      } else {
+        setBackground(Color.WHITE);
+      }
+
+      /*
+       * public void desactivarList(){
+       * this.removeMouseListener(this.getMouseListeners()[0]);
+       * }
+       */
+    }
+
+    public void highlight(boolean highlight) {
+      setBorder(highlight ? BorderFactory.createLineBorder(Color.MAGENTA, 3, true)
+          : originalBorder);
+    }
+  }
+
+  /*
+   * Elimina los MouseListener de cada Cell.<br>
+   * Esto sirve para cuando queremos que el usuario
+   * no pueda clickar en las Cells, por ejemplo
+   * cuando ya ha colocado todos los barcos
+   */
+
+  public void desactivarListener() {
+    for (int i = 0; i < 10; i++)
+      for (int j = 0; j < 10; j++)
+        cells[i][j].removeMouseListener(cells[i][j].getMouseListeners()[0]);
+  }
+
+  // Repintar cuando se actualize el logicBoard
+  public void repaintCell(PointXY pointXY) {
+    if (logicBoard.logicMatrix[pointXY.x][pointXY.y] == 1) {
+      cells[pointXY.x][pointXY.y].setBackground(Color.RED);
+    } else if (logicBoard.logicMatrix[pointXY.x][pointXY.y] == 0) {
+      cells[pointXY.x][pointXY.y].setBackground(Color.BLUE);
+    }
   }
 }

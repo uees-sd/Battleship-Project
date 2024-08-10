@@ -1,8 +1,6 @@
 package com.example.Views;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 
 import com.example.Models.ClientModel;
 
@@ -10,6 +8,7 @@ import java.awt.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ClientView {
   private JPanel clientPanel, connectionPanel, infoPanel, gamePanel;
@@ -19,6 +18,8 @@ public class ClientView {
   private ClientModel clientModel;
   private Font font = new Font("Arial", Font.PLAIN, 12);
   private ArrayList<String> strings = new ArrayList<>();
+  // private ArrayList<Board> boards = new ArrayList<>();
+  private Board myBoard, enemyBoard;
   private JLabel lblStatus;
 
   public ClientView(ClientModel clientModel) {
@@ -73,8 +74,6 @@ public class ClientView {
   private void initInfoPanel() {
     lblStatus = new JLabel("Iniciando Partida");
     infoPanel = new JPanel();
-    infoPanel.setBorder(
-        BorderFactory.createCompoundBorder(new EmptyBorder(20, 60, 20, 60), new LineBorder(Color.MAGENTA, 2)));
     infoPanel.setLayout(new BorderLayout());
     infoArea = new JTextPane();
     infoArea.setFont(font);
@@ -90,8 +89,6 @@ public class ClientView {
   private void initGamePanel() {
     gamePanel = new JPanel();
     gamePanel.setLayout(new BoxLayout(gamePanel, BoxLayout.X_AXIS));
-    gamePanel
-        .setBorder(BorderFactory.createCompoundBorder(new EmptyBorder(20, 60, 20, 60), new LineBorder(Color.BLACK, 2)));
     gamePanel.add(infoPanel);
   }
 
@@ -112,6 +109,10 @@ public class ClientView {
 
   public void showError(String message) {
     JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.ERROR_MESSAGE);
+  }
+
+  public void showWinner(String winner) {
+    JOptionPane.showMessageDialog(null, winner, "Fin de la partida", JOptionPane.INFORMATION_MESSAGE);
   }
 
   public JPanel getClientPanel() {
@@ -142,6 +143,26 @@ public class ClientView {
     return serverPort;
   }
 
+  public ArrayList<Board> getBoards() {
+    return null;
+  }
+
+  public Board getMyBoard() {
+    return myBoard;
+  }
+
+  public Board getEnemyBoard() {
+    return enemyBoard;
+  }
+
+  public void setEnemyBoard(Board enemyBoard) {
+    this.enemyBoard = enemyBoard;
+  }
+
+  public void setLblStatus(String status) {
+    lblStatus.setText(status);
+  }
+
   public void updateInfoPort() {
     try {
       strings.add(1, "<b>Puerto:</b> " + clientModel.getPort() + "<br><b>IP Servidor:</b> "
@@ -158,14 +179,28 @@ public class ClientView {
       sb.append(user).append("<br>");
     }
     strings.add(2, sb.toString());
-    infoArea.setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(3));
+    strings.add(3, "<br>");
+    strings.add(4, "<br>");
+    infoArea.setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(5));
   }
 
-  public void updateBoards() {
+  public void updateInfoShips(ArrayList<String> shipSunk) {
+    strings.set(3, shipSunk.get(0));
+    strings.set(4, shipSunk.get(1));
+    infoArea
+        .setText(strings.get(0) + strings.get(1) + strings.get(2) + strings.get(3) + strings.get(4) + strings.get(5));
+  }
+
+  public void updateBoards(String name) {
     for (Board board : clientModel.getBoards()) {
+      if (board.getBoardTitle().equals(name)) {
+        myBoard = board;
+      } else {
+        enemyBoard = board;
+      }
       gamePanel.add(board);
     }
-    lblStatus.setText("Coloca tus Barcos!!");
+    setLblStatus("Coloca los barcos!!");
     gamePanel.revalidate();
     gamePanel.repaint();
 
@@ -176,8 +211,35 @@ public class ClientView {
 
     if (parent instanceof JFrame) {
       ((JFrame) parent).pack();
+      ((JFrame) parent).setLocationRelativeTo(null);
     } else {
       System.out.println("JFrame no encontrado");
     }
+  }
+
+  public int showQuestion(String[] question) {
+    List<String> optionsList = new ArrayList<>();
+
+    for (int i = 1; i <= 4; i++) {
+      if (question[i] != null) {
+        optionsList.add(question[i]);
+      }
+    }
+
+    String[] options = optionsList.toArray(new String[0]);
+
+    int respuesta = -1;
+    do {
+      respuesta = JOptionPane.showOptionDialog(
+          null,
+          question[0],
+          "Pregunta",
+          JOptionPane.DEFAULT_OPTION,
+          JOptionPane.QUESTION_MESSAGE,
+          null,
+          options,
+          null);
+    } while (respuesta == -1);
+    return respuesta;
   }
 }
