@@ -150,6 +150,8 @@ public class Board extends JPanel {
             cell.setHit(true); // Marca como atacado si el valor en la lógica es 1
         } else if (logicBoard.logicMatrix[pointXY.x][pointXY.y] == 0) {
             cell.setHit(false); // Marca como no atacado si el valor en la lógica es 0
+            cell.setBackground(Color.BLUE); // Cambia el color a azul si no hubo impacto
         }
     }
+    
 }
