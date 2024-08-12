@@ -26,7 +26,7 @@ public class ServerController {
         frame.setSize(300, 200);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setTitle("BattleShip Educativo - Servidor");
-        frame.setVisible(true);
+        frame.setVisible(false);
     }
 
     public void startListening() {
