@@ -112,7 +112,6 @@ public class ClientHandler implements Runnable {
         String obj = (String) message;
         if (obj.equals("CHANGE_TURN") || obj.equals("Comienza el juego") || obj.contains("ha ganado")
             || obj.contains("ha abandonado")) {
-          System.out.println("Mensaje: " + obj);
           clientHandler.sendMessage(obj);
         } else if (obj.toString().contains("Barcos Hundidos de")) {
           sunkShipsText.set(serverModel.getOnlineUsers().indexOf(playerName), obj);
